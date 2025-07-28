@@ -61,6 +61,7 @@ const productList = [
 ];
 
 let cartDisp;
+
 function main() {
   const header = document.createElement('div');
   const gridContainer = document.createElement('div');
@@ -263,7 +264,9 @@ function main() {
     }, 60000);
   }, Math.random() * 20000);
 }
+
 let sum;
+
 function onUpdateSelectOptions() {
   let totalStock;
   let opt;
@@ -520,21 +523,22 @@ function handleCalculateCartStuff() {
   doRenderBonusPoints();
 }
 
-var doRenderBonusPoints = function () {
-  let basePoints;
-  let finalPoints;
-  let pointsDetail;
-  let hasKeyboard;
-  let hasMouse;
-  let hasMonitorArm;
-  let nodes;
+function doRenderBonusPoints() {
+  const nodes = cartDisp.children;
+  const basePoints = Math.floor(totalAmt / 1000);
+  let finalPoints = 0;
+  const pointsDetail = [];
+  let hasKeyboard = false;
+  let hasMouse = false;
+  let hasMonitorArm = false;
+  let product = null;
+  const ptsTag = document.getElementById('loyalty-points');
+
   if (cartDisp.children.length === 0) {
-    document.getElementById('loyalty-points').style.display = 'none';
+    if (ptsTag) ptsTag.style.display = 'none';
     return;
   }
-  basePoints = Math.floor(totalAmt / 1000);
-  finalPoints = 0;
-  pointsDetail = [];
+
   if (basePoints > 0) {
     finalPoints = basePoints;
     pointsDetail.push('기본: ' + basePoints + 'p');
@@ -545,12 +549,8 @@ var doRenderBonusPoints = function () {
       pointsDetail.push('화요일 2배');
     }
   }
-  hasKeyboard = false;
-  hasMouse = false;
-  hasMonitorArm = false;
-  nodes = cartDisp.children;
+
   for (const node of nodes) {
-    let product = null;
     for (let pIdx = 0; pIdx < productList.length; pIdx++) {
       if (productList[pIdx].id === node.id) {
         product = productList[pIdx];
@@ -560,12 +560,13 @@ var doRenderBonusPoints = function () {
     if (!product) continue;
     if (product.id === PRODUCT_ONE) {
       hasKeyboard = true;
-    } else if (product.id === p2) {
+    } else if (product.id === PRODUCT_TWO) {
       hasMouse = true;
-    } else if (product.id === product_3) {
+    } else if (product.id === PRODUCT_THREE) {
       hasMonitorArm = true;
     }
   }
+
   if (hasKeyboard && hasMouse) {
     finalPoints = finalPoints + 50;
     pointsDetail.push('키보드+마우스 세트 +50p');
@@ -577,19 +578,15 @@ var doRenderBonusPoints = function () {
   if (itemCnt >= 30) {
     finalPoints = finalPoints + 100;
     pointsDetail.push('대량구매(30개+) +100p');
-  } else {
-    if (itemCnt >= 20) {
-      finalPoints = finalPoints + 50;
-      pointsDetail.push('대량구매(20개+) +50p');
-    } else {
-      if (itemCnt >= 10) {
-        finalPoints = finalPoints + 20;
-        pointsDetail.push('대량구매(10개+) +20p');
-      }
-    }
+  } else if (itemCnt >= 20) {
+    finalPoints = finalPoints + 50;
+    pointsDetail.push('대량구매(20개+) +50p');
+  } else if (itemCnt >= 10) {
+    finalPoints = finalPoints + 20;
+    pointsDetail.push('대량구매(10개+) +20p');
   }
+
   bonusPts = finalPoints;
-  const ptsTag = document.getElementById('loyalty-points');
   if (ptsTag) {
     if (bonusPts > 0) {
       ptsTag.innerHTML =
@@ -605,18 +602,19 @@ var doRenderBonusPoints = function () {
       ptsTag.style.display = 'block';
     }
   }
-};
+}
+
 function onGetStockTotal() {
-  let sum;
   let i;
   let currentProduct;
-  sum = 0;
+  let totalStock = 0;
   for (i = 0; i < productList.length; i++) {
     currentProduct = productList[i];
-    sum += currentProduct.q;
+    totalStock += currentProduct.q;
   }
-  return sum;
+  return totalStock;
 }
+
 var handleStockInfoUpdate = function () {
   let infoMsg;
   let totalStock;
