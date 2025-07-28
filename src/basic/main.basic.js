@@ -12,6 +12,54 @@ const PRODUCT_THREE = 'p3';
 const PRODUCT_FOUR = 'p4';
 const PRODUCT_FIVE = 'p5';
 
+const productList = [
+  {
+    id: PRODUCT_ONE,
+    name: '버그 없애는 키보드',
+    val: 10000,
+    originalVal: 10000,
+    q: 50,
+    onSale: false,
+    suggestSale: false,
+  },
+  {
+    id: PRODUCT_TWO,
+    name: '생산성 폭발 마우스',
+    val: 20000,
+    originalVal: 20000,
+    q: 30,
+    onSale: false,
+    suggestSale: false,
+  },
+  {
+    id: PRODUCT_THREE,
+    name: '거북목 탈출 모니터암',
+    val: 30000,
+    originalVal: 30000,
+    q: 20,
+    onSale: false,
+    suggestSale: false,
+  },
+  {
+    id: PRODUCT_FOUR,
+    name: '에러 방지 노트북 파우치',
+    val: 15000,
+    originalVal: 15000,
+    q: 0,
+    onSale: false,
+    suggestSale: false,
+  },
+  {
+    id: PRODUCT_FIVE,
+    name: `코딩할 때 듣는 Lo-Fi 스피커`,
+    val: 25000,
+    originalVal: 25000,
+    q: 10,
+    onSale: false,
+    suggestSale: false,
+  },
+];
+
 let cartDisp;
 function main() {
   let header;
@@ -26,53 +74,7 @@ function main() {
   totalAmt = 0;
   itemCnt = 0;
   lastSel = null;
-  const productList = [
-    {
-      id: PRODUCT_ONE,
-      name: '버그 없애는 키보드',
-      val: 10000,
-      originalVal: 10000,
-      q: 50,
-      onSale: false,
-      suggestSale: false,
-    },
-    {
-      id: PRODUCT_TWO,
-      name: '생산성 폭발 마우스',
-      val: 20000,
-      originalVal: 20000,
-      q: 30,
-      onSale: false,
-      suggestSale: false,
-    },
-    {
-      id: PRODUCT_THREE,
-      name: '거북목 탈출 모니터암',
-      val: 30000,
-      originalVal: 30000,
-      q: 20,
-      onSale: false,
-      suggestSale: false,
-    },
-    {
-      id: PRODUCT_FOUR,
-      name: '에러 방지 노트북 파우치',
-      val: 15000,
-      originalVal: 15000,
-      q: 0,
-      onSale: false,
-      suggestSale: false,
-    },
-    {
-      id: PRODUCT_FIVE,
-      name: `코딩할 때 듣는 Lo-Fi 스피커`,
-      val: 25000,
-      originalVal: 25000,
-      q: 10,
-      onSale: false,
-      suggestSale: false,
-    },
-  ];
+
   const root = document.getElementById('app');
   header = document.createElement('div');
   header.className = 'mb-8';
@@ -782,9 +784,10 @@ addBtn.addEventListener('click', function () {
 });
 cartDisp.addEventListener('click', function (event) {
   const tgt = event.target;
+  const prodId = tgt.dataset.productId;
+  const itemElem = document.getElementById(prodId);
+  const qtyElem = itemElem.querySelector('.quantity-number');
   if (tgt.classList.contains('quantity-change') || tgt.classList.contains('remove-item')) {
-    const prodId = tgt.dataset.productId;
-    const itemElem = document.getElementById(prodId);
     let prod = null;
     for (let prdIdx = 0; prdIdx < productList.length; prdIdx++) {
       if (productList[prdIdx].id === prodId) {
@@ -794,7 +797,6 @@ cartDisp.addEventListener('click', function (event) {
     }
     if (tgt.classList.contains('quantity-change')) {
       const qtyChange = parseInt(tgt.dataset.change);
-      var qtyElem = itemElem.querySelector('.quantity-number');
       const currentQty = parseInt(qtyElem.textContent);
       const newQty = currentQty + qtyChange;
       if (newQty > 0 && newQty <= prod.q + currentQty) {
@@ -807,12 +809,9 @@ cartDisp.addEventListener('click', function (event) {
         alert('재고가 부족합니다.');
       }
     } else if (tgt.classList.contains('remove-item')) {
-      var qtyElem = itemElem.querySelector('.quantity-number');
       const remQty = parseInt(qtyElem.textContent);
       prod.q += remQty;
       itemElem.remove();
-    }
-    if (prod && prod.q < 5) {
     }
     handleCalculateCartStuff();
     onUpdateSelectOptions();
