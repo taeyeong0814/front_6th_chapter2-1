@@ -62,21 +62,19 @@ const productList = [
 
 let cartDisp;
 function main() {
-  let header;
-  let gridContainer;
-  let leftColumn;
-  let selectorContainer;
-  let rightColumn;
-  let manualToggle;
+  const header = document.createElement('div');
+  const gridContainer = document.createElement('div');
+  const leftColumn = document.createElement('div');
+  const selectorContainer = document.createElement('div');
+  const rightColumn = document.createElement('div');
+  const manualToggle = document.createElement('button');
   const manualOverlay = document.createElement('div');
   const manualColumn = document.createElement('div');
-  let lightningDelay;
   totalAmt = 0;
   itemCnt = 0;
   lastSel = null;
 
   const root = document.getElementById('app');
-  header = document.createElement('div');
   header.className = 'mb-8';
   header.innerHTML = `
     <h1 class="text-xs font-medium tracking-extra-wide uppercase mb-2">🛒 Hanghae Online Store</h1>
@@ -85,10 +83,7 @@ function main() {
   `;
   sel = document.createElement('select');
   sel.id = 'product-select';
-  gridContainer = document.createElement('div');
-  leftColumn = document.createElement('div');
   leftColumn['className'] = 'bg-white border border-gray-200 p-8 overflow-y-auto';
-  selectorContainer = document.createElement('div');
   selectorContainer.className = 'mb-6 pb-6 border-b border-gray-200';
   sel.className = 'w-full p-3 border border-gray-300 rounded-lg text-base mb-3';
   gridContainer.className = 'grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6 flex-1 overflow-hidden';
@@ -107,7 +102,6 @@ function main() {
   cartDisp = document.createElement('div');
   leftColumn.appendChild(cartDisp);
   cartDisp.id = 'cart-items';
-  rightColumn = document.createElement('div');
   rightColumn.className = 'bg-black text-white p-8 flex flex-col';
   rightColumn.innerHTML = `
     <h2 class="text-xs font-medium mb-5 tracking-extra-wide uppercase">Order Summary</h2>
@@ -139,7 +133,6 @@ function main() {
     </p>
   `;
   sum = rightColumn.querySelector('#cart-total');
-  manualToggle = document.createElement('button');
   manualToggle.onclick = function () {
     manualOverlay.classList.toggle('hidden');
     manualColumn.classList.toggle('translate-x-full');
@@ -151,7 +144,6 @@ function main() {
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
     </svg>
   `;
-  manualOverlay = document.createElement('div');
   manualOverlay.className = 'fixed inset-0 bg-black/50 z-40 hidden transition-opacity duration-300';
   manualOverlay.onclick = function (e) {
     if (e.target === manualOverlay) {
@@ -159,7 +151,6 @@ function main() {
       manualColumn.classList.add('translate-x-full');
     }
   };
-  manualColumn = document.createElement('div');
   manualColumn.className =
     'fixed right-0 top-0 h-full w-80 bg-white shadow-2xl p-6 overflow-y-auto z-50 transform translate-x-full transition-transform duration-300';
   manualColumn.innerHTML = `
@@ -229,13 +220,10 @@ function main() {
   root.appendChild(gridContainer);
   root.appendChild(manualToggle);
   root.appendChild(manualOverlay);
-  let initStock = 0;
-  for (let i = 0; i < productList.length; i++) {
-    initStock += productList[i].q;
-  }
   onUpdateSelectOptions();
   handleCalculateCartStuff();
-  lightningDelay = Math.random() * 10000;
+
+  const lightningDelay = Math.random() * 10000;
   setTimeout(() => {
     setInterval(function () {
       const luckyIdx = Math.floor(Math.random() * productList.length);
@@ -249,10 +237,9 @@ function main() {
       }
     }, 30000);
   }, lightningDelay);
+
   setTimeout(function () {
     setInterval(function () {
-      if (cartDisp.children.length === 0) {
-      }
       if (lastSel) {
         let suggest = null;
         for (let k = 0; k < productList.length; k++) {
@@ -287,7 +274,8 @@ function onUpdateSelectOptions() {
     const _p = productList[idx];
     totalStock = totalStock + _p.q;
   }
-  for (var i = 0; i < productList.length; i++) {
+
+  for (let i = 0; i < productList.length; i++) {
     (function () {
       const item = productList[i];
       opt = document.createElement('option');
@@ -322,6 +310,7 @@ function onUpdateSelectOptions() {
     sel.style.borderColor = '';
   }
 }
+
 function handleCalculateCartStuff() {
   let cartItems;
   let subTot;
@@ -546,6 +535,7 @@ function handleCalculateCartStuff() {
   handleStockInfoUpdate();
   doRenderBonusPoints();
 }
+
 var doRenderBonusPoints = function () {
   let basePoints;
   let finalPoints;
