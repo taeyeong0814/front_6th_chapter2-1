@@ -659,9 +659,10 @@ function updateCartItemDisplay(cartItem, product) {
 
 function doUpdatePricesInCart() {
   const cartItems = cartDisp.children;
+  const productMap = Object.fromEntries(productList.map((p) => [p.id, p]));
   for (let i = 0; i < cartItems.length; i++) {
     const itemId = cartItems[i].id;
-    const product = productList.find((prod) => prod.id === itemId);
+    const product = productMap[itemId];
     if (product) {
       updateCartItemDisplay(cartItems[i], product);
     }
