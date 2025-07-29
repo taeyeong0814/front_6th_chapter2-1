@@ -604,25 +604,23 @@ function doRenderBonusPoints() {
   }
 }
 
-function onGetStockTotal() {
-  let i;
-  let currentProduct;
-  let totalStock = 0;
-  for (i = 0; i < productList.length; i++) {
-    currentProduct = productList[i];
-    totalStock += currentProduct.q;
-  }
-  return totalStock;
-}
+// function onGetStockTotal() {
+//   let i;
+//   let currentProduct;
+//   let totalStock = 0;
+//   for (i = 0; i < productList.length; i++) {
+//     currentProduct = productList[i];
+//     totalStock += currentProduct.q;
+//   }
+//   return totalStock;
+// }
 
-var handleStockInfoUpdate = function () {
+function handleStockInfoUpdate() {
   let infoMsg;
-  let totalStock;
-  let messageOptimizer;
+  // const totalStock = onGetStockTotal();
   infoMsg = '';
-  totalStock = onGetStockTotal();
-  if (totalStock < 30) {
-  }
+  // if (totalStock < 30) {
+  // }
   productList.forEach(function (item) {
     if (item.q < 5) {
       if (item.q > 0) {
@@ -633,21 +631,10 @@ var handleStockInfoUpdate = function () {
     }
   });
   stockInfo.textContent = infoMsg;
-};
+}
+
 function doUpdatePricesInCart() {
-  let totalCount = 0,
-    j = 0;
-  let cartItems;
-  while (cartDisp.children[j]) {
-    const qty = cartDisp.children[j].querySelector('.quantity-number');
-    totalCount += qty ? parseInt(qty.textContent) : 0;
-    j++;
-  }
-  totalCount = 0;
-  for (j = 0; j < cartDisp.children.length; j++) {
-    totalCount += parseInt(cartDisp.children[j].querySelector('.quantity-number').textContent);
-  }
-  cartItems = cartDisp.children;
+  const cartItems = cartDisp.children;
   for (let i = 0; i < cartItems.length; i++) {
     const itemId = cartItems[i].id;
     let product = null;
@@ -692,6 +679,7 @@ function doUpdatePricesInCart() {
   }
   handleCalculateCartStuff();
 }
+
 main();
 addBtn.addEventListener('click', function () {
   const selItem = sel.value;
