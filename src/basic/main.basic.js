@@ -637,13 +637,9 @@ function doUpdatePricesInCart() {
   const cartItems = cartDisp.children;
   for (let i = 0; i < cartItems.length; i++) {
     const itemId = cartItems[i].id;
-    let product = null;
-    for (let productIdx = 0; productIdx < productList.length; productIdx++) {
-      if (productList[productIdx].id === itemId) {
-        product = productList[productIdx];
-        break;
-      }
-    }
+
+    const product = productList.find((prod) => prod.id === itemId);
+
     if (product) {
       const priceDiv = cartItems[i].querySelector('.text-lg');
       const nameDiv = cartItems[i].querySelector('h3');
