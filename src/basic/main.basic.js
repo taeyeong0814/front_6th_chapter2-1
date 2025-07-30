@@ -12,6 +12,7 @@ import { CALCULATION_CONSTANTS, DISCOUNT_RATES, QUANTITY_THRESHOLDS, TIME_DELAYS
 
 let cartDisp;
 
+import { CartItemDisplay } from './components/CartItemDisplay.js';
 import { renderHeader } from './components/Header.js';
 import { renderManualOverlay } from './components/ManualOverlay.js';
 import { renderOrderSummary } from './components/OrderSummary.js';
@@ -349,24 +350,9 @@ function handleCalculateCartStuff() {
   }
 }
 
-// function onGetStockTotal() {
-//   let i;
-//   let currentProduct;
-//   let totalStock = 0;
-//   for (i = 0; i < productList.length; i++) {
-//     currentProduct = productList[i];
-//     totalStock += currentProduct.q;
-//   }
-//   return totalStock;
-
-// }
-
 function handleStockInfoUpdate() {
   let infoMsg;
-  // const totalStock = onGetStockTotal();
   infoMsg = '';
-  // if (totalStock < 30) {
-  // }
   products.forEach(function (item) {
     if (item.quantity < 5) {
       if (item.quantity > 0) {
@@ -379,30 +365,6 @@ function handleStockInfoUpdate() {
   stockInfo.textContent = infoMsg;
 }
 
-function updateCartItemDisplay(cartItem, product) {
-  const priceDiv = cartItem.querySelector('.text-lg');
-  const nameDiv = cartItem.querySelector('h3');
-  if (product.onSale && product.suggestSale) {
-    priceDiv.innerHTML = `
-      <span class="line-through text-gray-400">${formatPrice(product.originalVal)}</span> <span class="text-purple-600">${formatPrice(product.val)}</span>
-    `;
-    nameDiv.textContent = `⚡💝${product.name}`;
-  } else if (product.onSale) {
-    priceDiv.innerHTML = `
-      <span class="line-through text-gray-400">${formatPrice(product.originalVal)}</span> <span class="text-red-500">${formatPrice(product.val)}</span>
-    `;
-    nameDiv.textContent = `⚡${product.name}`;
-  } else if (product.suggestSale) {
-    priceDiv.innerHTML = `
-      <span class="line-through text-gray-400">${formatPrice(product.originalVal)}</span> <span class="text-blue-500">${formatPrice(product.val)}</span>
-    `;
-    nameDiv.textContent = `💝${product.name}`;
-  } else {
-    priceDiv.textContent = formatPrice(product.val);
-    nameDiv.textContent = product.name;
-  }
-}
-
 function doUpdatePricesInCart() {
   const cartItems = cartDisp.children;
   const productMap = Object.fromEntries(products.map((p) => [p.id, p]));
@@ -410,7 +372,7 @@ function doUpdatePricesInCart() {
     const itemId = cartItems[i].id;
     const product = productMap[itemId];
     if (product) {
-      updateCartItemDisplay(cartItems[i], product);
+      CartItemDisplay(cartItems[i], product);
     }
   }
   handleCalculateCartStuff();
