@@ -66,13 +66,15 @@ import { renderCartList } from '../components/CartList.js';
 import { renderHeader } from '../components/Header.js';
 import { renderManualOverlay } from '../components/ManualOverlay.js';
 import { renderOrderSummary } from '../components/OrderSummary.js';
+import { createElement } from '../utils/dom.js';
+import { formatPrice } from '../utils/format.js';
 
 function main() {
   // Header 분리된 컴포넌트 사용
   const header = renderHeader();
-  const gridContainer = document.createElement('div');
-  const leftColumn = document.createElement('div');
-  const selectorContainer = document.createElement('div');
+  const gridContainer = createElement('div');
+  const leftColumn = createElement('div');
+  const selectorContainer = createElement('div');
   // OrderSummary 분리된 컴포넌트 사용
   const rightColumn = renderOrderSummary();
   // ManualOverlay 분리된 컴포넌트 사용
@@ -82,14 +84,14 @@ function main() {
   lastSel = null;
 
   const root = document.getElementById('app');
-  sel = document.createElement('select');
+  sel = createElement('select');
   sel.id = 'product-select';
   leftColumn['className'] = 'bg-white border border-gray-200 p-8 overflow-y-auto';
   selectorContainer.className = 'mb-6 pb-6 border-b border-gray-200';
   sel.className = 'w-full p-3 border border-gray-300 rounded-lg text-base mb-3';
   gridContainer.className = 'grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6 flex-1 overflow-hidden';
-  addBtn = document.createElement('button');
-  stockInfo = document.createElement('div');
+  addBtn = createElement('button');
+  stockInfo = createElement('div');
   addBtn.id = 'add-to-cart';
   stockInfo.id = 'stock-status';
   stockInfo.className = 'text-xs text-red-500 mt-3 whitespace-pre-line';
@@ -100,7 +102,7 @@ function main() {
   selectorContainer.appendChild(addBtn);
   selectorContainer.appendChild(stockInfo);
   leftColumn.appendChild(selectorContainer);
-  cartDisp = document.createElement('div');
+  cartDisp = createElement('div');
   leftColumn.appendChild(renderCartList({ cartDisp }));
   sum = rightColumn.querySelector('#cart-total');
   gridContainer.appendChild(leftColumn);
@@ -169,7 +171,7 @@ function onUpdateSelectOptions() {
   for (let i = 0; i < productList.length; i++) {
     (function () {
       const item = productList[i];
-      opt = document.createElement('option');
+      opt = createElement('option');
       opt.value = item.id;
       discountText = '';
       if (item.onSale) discountText += ' ⚡SALE';
@@ -310,7 +312,7 @@ function handleCalculateCartStuff() {
       summaryDetails.innerHTML += `
         <div class="flex justify-between text-xs tracking-wide text-gray-400">
           <span>${curItem.name} x ${q}</span>
-          <span>₩${itemTotal.toLocaleString()}</span>
+          <span>${formatPrice(itemTotal)}</span>
         </div>
       `;
     }
@@ -318,7 +320,7 @@ function handleCalculateCartStuff() {
       <div class="border-t border-white/10 my-3"></div>
       <div class="flex justify-between text-sm tracking-wide">
         <span>Subtotal</span>
-        <span>₩${subTot.toLocaleString()}</span>
+        <span>${formatPrice(subTot)}</span>
       </div>
     `;
     if (itemCnt >= 30) {
@@ -356,7 +358,7 @@ function handleCalculateCartStuff() {
 
   const totalDiv = sum.querySelector('.text-2xl');
   if (totalDiv) {
-    totalDiv.textContent = '₩' + Math.round(totalAmt).toLocaleString();
+    totalDiv.textContent = formatPrice(Math.round(totalAmt));
   }
 
   const loyaltyPointsDiv = document.getElementById('loyalty-points');
@@ -381,7 +383,7 @@ function handleCalculateCartStuff() {
           <span class="text-xs uppercase tracking-wide text-green-400">총 할인율</span>
           <span class="text-sm font-medium text-green-400">${(discRate * 100).toFixed(1)}%</span>
         </div>
-        <div class="text-2xs text-gray-300">₩${Math.round(savedAmount).toLocaleString()} 할인되었습니다</div>
+        <div class="text-2xs text-gray-300">${formatPrice(Math.round(savedAmount))} 할인되었습니다</div>
       </div>
     `;
   }
@@ -526,21 +528,21 @@ function updateCartItemDisplay(cartItem, product) {
   const nameDiv = cartItem.querySelector('h3');
   if (product.onSale && product.suggestSale) {
     priceDiv.innerHTML = `
-      <span class="line-through text-gray-400">₩${product.originalVal.toLocaleString()}</span> <span class="text-purple-600">₩${product.val.toLocaleString()}</span>
+      <span class="line-through text-gray-400">${formatPrice(product.originalVal)}</span> <span class="text-purple-600">${formatPrice(product.val)}</span>
     `;
     nameDiv.textContent = `⚡💝${product.name}`;
   } else if (product.onSale) {
     priceDiv.innerHTML = `
-      <span class="line-through text-gray-400">₩${product.originalVal.toLocaleString()}</span> <span class="text-red-500">₩${product.val.toLocaleString()}</span>
+      <span class="line-through text-gray-400">${formatPrice(product.originalVal)}</span> <span class="text-red-500">${formatPrice(product.val)}</span>
     `;
     nameDiv.textContent = `⚡${product.name}`;
   } else if (product.suggestSale) {
     priceDiv.innerHTML = `
-      <span class="line-through text-gray-400">₩${product.originalVal.toLocaleString()}</span> <span class="text-blue-500">₩${product.val.toLocaleString()}</span>
+      <span class="line-through text-gray-400">${formatPrice(product.originalVal)}</span> <span class="text-blue-500">${formatPrice(product.val)}</span>
     `;
     nameDiv.textContent = `💝${product.name}`;
   } else {
-    priceDiv.textContent = `₩${product.val.toLocaleString()}`;
+    priceDiv.textContent = formatPrice(product.val);
     nameDiv.textContent = product.name;
   }
 }
@@ -594,25 +596,38 @@ addBtn.addEventListener('click', function () {
       newItem.id = itemToAdd.id;
       newItem.className =
         'grid grid-cols-[80px_1fr_auto] gap-5 py-5 border-b border-gray-100 first:pt-0 last:border-b-0 last:pb-0';
-      newItem.innerHTML = `
-        <div class="w-20 h-20 bg-gradient-black relative overflow-hidden">
-          <div class="absolute top-1/2 left-1/2 w-[60%] h-[60%] bg-white/10 -translate-x-1/2 -translate-y-1/2 rotate-45"></div>
-        </div>
-        <div>
-          <h3 class="text-base font-normal mb-1 tracking-tight">${itemToAdd.onSale && itemToAdd.suggestSale ? '⚡💝' : itemToAdd.onSale ? '⚡' : itemToAdd.suggestSale ? '💝' : ''}${itemToAdd.name}</h3>
-          <p class="text-xs text-gray-500 mb-0.5 tracking-wide">PRODUCT</p>
-          <p class="text-xs text-black mb-3">${itemToAdd.onSale || itemToAdd.suggestSale ? '<span class="line-through text-gray-400">₩' + itemToAdd.originalVal.toLocaleString() + '</span> <span class="' + (itemToAdd.onSale && itemToAdd.suggestSale ? 'text-purple-600' : itemToAdd.onSale ? 'text-red-500' : 'text-blue-500') + '">₩' + itemToAdd.val.toLocaleString() + '</span>' : '₩' + itemToAdd.val.toLocaleString()}</p>
-          <div class="flex items-center gap-4">
-            <button class="quantity-change w-6 h-6 border border-black bg-white text-sm flex items-center justify-center transition-all hover:bg-black hover:text-white" data-product-id="${itemToAdd.id}" data-change="-1">−</button>
-            <span class="quantity-number text-sm font-normal min-w-[20px] text-center tabular-nums">1</span>
-            <button class="quantity-change w-6 h-6 border border-black bg-white text-sm flex items-center justify-center transition-all hover:bg-black hover:text-white" data-product-id="${itemToAdd.id}" data-change="1">+</button>
-          </div>
-        </div>
-        <div class="text-right">
-          <div class="text-lg mb-2 tracking-tight tabular-nums">${itemToAdd.onSale || itemToAdd.suggestSale ? '<span class="line-through text-gray-400">₩' + itemToAdd.originalVal.toLocaleString() + '</span> <span class="' + (itemToAdd.onSale && itemToAdd.suggestSale ? 'text-purple-600' : itemToAdd.onSale ? 'text-red-500' : 'text-blue-500') + '">₩' + itemToAdd.val.toLocaleString() + '</span>' : '₩' + itemToAdd.val.toLocaleString()}</div>
-          <a class="remove-item text-2xs text-gray-500 uppercase tracking-wider cursor-pointer transition-colors border-b border-transparent hover:text-black hover:border-black" data-product-id="${itemToAdd.id}">Remove</a>
-        </div>
-      `;
+      let priceHtml = '';
+      if (itemToAdd.onSale || itemToAdd.suggestSale) {
+        priceHtml = `<span class="line-through text-gray-400">${itemToAdd.originalVal}원</span> <span class="${itemToAdd.onSale && itemToAdd.suggestSale ? 'text-purple-600' : itemToAdd.onSale ? 'text-red-500' : 'text-blue-500'}">${itemToAdd.val}원</span>`;
+      } else {
+        priceHtml = itemToAdd.val + '원';
+      }
+      const namePrefix =
+        itemToAdd.onSale && itemToAdd.suggestSale
+          ? '⚡💝'
+          : itemToAdd.onSale
+            ? '⚡'
+            : itemToAdd.suggestSale
+              ? '💝'
+              : '';
+      newItem.innerHTML =
+        '<div class="w-20 h-20 bg-gradient-black relative overflow-hidden">' +
+        '  <div class="absolute top-1/2 left-1/2 w-[60%] h-[60%] bg-white/10 -translate-x-1/2 -translate-y-1/2 rotate-45"></div>' +
+        '</div>' +
+        '<div>' +
+        `  <h3 class="text-base font-normal mb-1 tracking-tight">${namePrefix}${itemToAdd.name}</h3>` +
+        '  <p class="text-xs text-gray-500 mb-0.5 tracking-wide">PRODUCT</p>' +
+        `  <p class="text-xs text-black mb-3">${priceHtml}</p>` +
+        '  <div class="flex items-center gap-4">' +
+        `    <button class="quantity-change w-6 h-6 border border-black bg-white text-sm flex items-center justify-center transition-all hover:bg-black hover:text-white" data-product-id="${itemToAdd.id}" data-change="-1">−</button>` +
+        '    <span class="quantity-number text-sm font-normal min-w-[20px] text-center tabular-nums">1</span>' +
+        `    <button class="quantity-change w-6 h-6 border border-black bg-white text-sm flex items-center justify-center transition-all hover:bg-black hover:text-white" data-product-id="${itemToAdd.id}" data-change="1">+</button>` +
+        '  </div>' +
+        '</div>' +
+        '<div class="text-right">' +
+        `  <div class="text-lg mb-2 tracking-tight tabular-nums">${priceHtml}</div>` +
+        `  <a class="remove-item text-2xs text-gray-500 uppercase tracking-wider cursor-pointer transition-colors border-b border-transparent hover:text-black hover:border-black" data-product-id="${itemToAdd.id}">Remove</a>` +
+        '</div>';
       cartDisp.appendChild(newItem);
       itemToAdd.q--;
     }
