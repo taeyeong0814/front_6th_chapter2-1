@@ -1,26 +1,16 @@
-let stockInfo;
-let itemCnt;
-let lastSel;
-let sel;
-let addBtn;
-let totalAmt = 0;
-
 import { BonusPoints } from './components/BonusPoints.js';
-import { products } from './data/productList.js';
-import { addItemToCart } from './hooks/useAddToCart.js';
-import { calculateBonusPoints } from './hooks/useBonusPoints.js';
-import { getUpdatedCartItems } from './hooks/useCartItems.js';
-import { getStockInfoMessage } from './hooks/useStockInfo.js';
-import { CALCULATION_CONSTANTS, DISCOUNT_RATES, QUANTITY_THRESHOLDS, TIME_DELAYS } from './utils/constants.js';
-
-let cartDisp;
-
 import { createCartItemElement } from './components/CartItem.js';
 import { handleCartItemAction } from './components/CartItemActions.js';
 import { CartItemDisplay } from './components/CartItemDisplay.js';
 import { renderHeader } from './components/Header.js';
 import { renderManualOverlay } from './components/ManualOverlay.js';
 import { renderOrderSummary } from './components/OrderSummary.js';
+import { products } from './data/productList.js';
+import { addItemToCart } from './hooks/useAddToCart.js';
+import { calculateBonusPoints } from './hooks/useBonusPoints.js';
+import { getUpdatedCartItems } from './hooks/useCartItems.js';
+import { getStockInfoMessage } from './hooks/useStockInfo.js';
+import { CALCULATION_CONSTANTS, DISCOUNT_RATES, QUANTITY_THRESHOLDS, TIME_DELAYS } from './utils/constants.js';
 import { createElement } from './utils/dom.js';
 import { formatPrice } from './utils/format.js';
 import { htmlToElement } from './utils/htmlToElement.js';
@@ -36,19 +26,17 @@ function main() {
   const rightColumnHtml = renderOrderSummary();
   // ManualOverlay 분리된 컴포넌트 사용 (문자열 반환)
   const { manualToggleHtml, manualOverlayHtml } = renderManualOverlay();
-  totalAmt = 0;
-  itemCnt = 0;
-  lastSel = null;
+  let lastSel = null;
 
   const root = document.getElementById('app');
-  sel = createElement('select');
+  const sel = createElement('select');
   sel.id = 'product-select';
   leftColumn['className'] = 'bg-white border border-gray-200 p-8 overflow-y-auto';
   selectorContainer.className = 'mb-6 pb-6 border-b border-gray-200';
   sel.className = 'w-full p-3 border border-gray-300 rounded-lg text-base mb-3';
   gridContainer.className = 'grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6 flex-1 overflow-hidden';
-  addBtn = createElement('button');
-  stockInfo = createElement('div');
+  const addBtn = createElement('button');
+  const stockInfo = createElement('div');
   addBtn.id = 'add-to-cart';
   stockInfo.id = 'stock-status';
   stockInfo.className = 'text-xs text-red-500 mt-3 whitespace-pre-line';
@@ -59,7 +47,7 @@ function main() {
   selectorContainer.appendChild(addBtn);
   selectorContainer.appendChild(stockInfo);
   leftColumn.appendChild(selectorContainer);
-  cartDisp = createElement('div');
+  const cartDisp = createElement('div');
   cartDisp.id = 'cart-items';
   leftColumn.appendChild(cartDisp);
   // rightColumn 삽입 (유틸 사용)
@@ -98,7 +86,7 @@ function main() {
     });
   }
   updateSelectOptions(sel, products);
-  handleCalculateCartStuff();
+  handleCalculateCartStuff(cartDisp, stockInfo);
 
   const lightningDelay = Math.random() * TIME_DELAYS.LIGHTNING_SALE_MAX;
   setTimeout(() => {
@@ -110,7 +98,7 @@ function main() {
         luckyItem.onSale = true;
         alert('⚡번개세일! ' + luckyItem.name + `이(가) ${DISCOUNT_RATES.LIGHTNING_SALE_RATE * 100}% 할인 중입니다!`);
         updateSelectOptions(sel, products);
-        doUpdatePricesInCart();
+        doUpdatePricesInCart(cartDisp, stockInfo);
       }
     }, TIME_DELAYS.LIGHTNING_SALE_INTERVAL);
   }, lightningDelay);
@@ -138,16 +126,59 @@ function main() {
           suggest.discountPrice = Math.round(suggest.discountPrice * (1 - DISCOUNT_RATES.SUGGEST_SALE_RATE));
           suggest.suggestSale = true;
           updateSelectOptions(sel, products);
-          doUpdatePricesInCart();
+          doUpdatePricesInCart(cartDisp, stockInfo);
         }
       }
     }, TIME_DELAYS.SUGGEST_SALE_INTERVAL);
   }, Math.random() * TIME_DELAYS.SUGGEST_SALE_MAX);
+  // addBtn, cartDisp 이벤트 핸들러에 stockInfo 전달
+  addBtn.addEventListener('click', function () {
+    const selItem = sel.value;
+    const { updatedProducts, addResult } = addItemToCart(products, cartDisp.children, selItem);
+    if (!addResult) return;
+
+    // 실제 products 배열 업데이트
+    for (let i = 0; i < products.length; i++) {
+      products[i].quantity = updatedProducts[i].quantity;
+    }
+
+    if (addResult.error === 'out-of-stock') {
+      alert('재고가 부족합니다.');
+      return;
+    }
+
+    // UI 처리 (컴포넌트 분리)
+    if (addResult.isNew) {
+      const newItem = createCartItemElement(addResult.item, 1);
+      cartDisp.appendChild(newItem);
+    } else {
+      const item = document.getElementById(addResult.item.id);
+      if (item) {
+        const qtyElem = item.querySelector('.quantity-number');
+        qtyElem.textContent = addResult.newQty;
+      }
+    }
+    handleCalculateCartStuff(cartDisp, stockInfo);
+    lastSel = selItem;
+  });
+
+  cartDisp.addEventListener('click', function (event) {
+    handleCartItemAction(
+      event,
+      products,
+      cartDisp,
+      updateSelectOptions,
+      function () {
+        handleCalculateCartStuff(cartDisp, stockInfo);
+      },
+      sel
+    );
+  });
 }
 
 let sum;
 
-function handleCalculateCartStuff() {
+function handleCalculateCartStuff(cartDisp, stockInfo) {
   const cartItems = cartDisp.children;
   let subTot = 0;
   const itemDiscounts = [];
@@ -157,8 +188,8 @@ function handleCalculateCartStuff() {
   let previousCount = 0;
   // let points = 0;
   let discRate = 0;
-  totalAmt = 0;
-  itemCnt = 0;
+  let totalAmt = 0;
+  let itemCnt = 0;
 
   // 재고 부족 상품 목록
   for (let idx = 0; idx < products.length; idx++) {
@@ -333,7 +364,7 @@ function handleCalculateCartStuff() {
   }
   stockInfo.textContent = stockMsg;
 
-  handleStockInfoUpdate();
+  handleStockInfoUpdate(stockInfo);
 
   // React 스타일: 포인트 계산 및 렌더링 분리 호출 (UI 문자열 반환)
   const { points, details } = calculateBonusPoints({
@@ -356,51 +387,18 @@ function handleCalculateCartStuff() {
 }
 
 // UI 적용 함수: 재고 메시지 갱신
-function handleStockInfoUpdate() {
+function handleStockInfoUpdate(stockInfo) {
   const infoMsg = getStockInfoMessage(products);
   stockInfo.textContent = infoMsg;
 }
 
 // UI 적용 함수: 카트 내 상품 UI 업데이트 및 합계 재계산
-function doUpdatePricesInCart() {
+function doUpdatePricesInCart(cartDisp, stockInfo) {
   const updated = getUpdatedCartItems(cartDisp.children, products);
   updated.forEach(({ cartItem, product }) => {
     CartItemDisplay(cartItem, product);
   });
-  handleCalculateCartStuff();
+  handleCalculateCartStuff(cartDisp, stockInfo);
 }
 
 main();
-addBtn.addEventListener('click', function () {
-  const selItem = sel.value;
-  const { updatedProducts, addResult } = addItemToCart(products, cartDisp.children, selItem);
-  if (!addResult) return;
-
-  // 실제 products 배열 업데이트
-  for (let i = 0; i < products.length; i++) {
-    products[i].quantity = updatedProducts[i].quantity;
-  }
-
-  if (addResult.error === 'out-of-stock') {
-    alert('재고가 부족합니다.');
-    return;
-  }
-
-  // UI 처리 (컴포넌트 분리)
-  if (addResult.isNew) {
-    const newItem = createCartItemElement(addResult.item, 1);
-    cartDisp.appendChild(newItem);
-  } else {
-    const item = document.getElementById(addResult.item.id);
-    if (item) {
-      const qtyElem = item.querySelector('.quantity-number');
-      qtyElem.textContent = addResult.newQty;
-    }
-  }
-  handleCalculateCartStuff();
-  lastSel = selItem;
-});
-
-cartDisp.addEventListener('click', function (event) {
-  handleCartItemAction(event, products, cartDisp, updateSelectOptions, handleCalculateCartStuff, sel);
-});
