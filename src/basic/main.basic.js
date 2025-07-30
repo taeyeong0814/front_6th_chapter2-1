@@ -1,4 +1,3 @@
-let bonusPts = 0;
 let stockInfo;
 let itemCnt;
 let lastSel;
@@ -6,33 +5,30 @@ let sel;
 let addBtn;
 let totalAmt = 0;
 
-import { PRODUCT_IDS, products } from '../data/productList.js';
-import {
-  CALCULATION_CONSTANTS,
-  DISCOUNT_RATES,
-  POINT_RATES,
-  QUANTITY_THRESHOLDS,
-  TIME_DELAYS,
-} from '../utils/constants.js';
+import { BonusPoints } from './components/BonusPoints.js';
+import { products } from './data/productList.js';
+import { calculateBonusPoints } from './hooks/useBonusPoints.js';
+import { CALCULATION_CONSTANTS, DISCOUNT_RATES, QUANTITY_THRESHOLDS, TIME_DELAYS } from './utils/constants.js';
 
 let cartDisp;
 
-import { renderHeader } from '../components/Header.js';
-import { renderManualOverlay } from '../components/ManualOverlay.js';
-import { renderOrderSummary } from '../components/OrderSummary.js';
-import { createElement } from '../utils/dom.js';
-import { formatPrice } from '../utils/format.js';
+import { renderHeader } from './components/Header.js';
+import { renderManualOverlay } from './components/ManualOverlay.js';
+import { renderOrderSummary } from './components/OrderSummary.js';
+import { createElement } from './utils/dom.js';
+import { formatPrice } from './utils/format.js';
+import { htmlToElement } from './utils/htmlToElement.js';
 
 function main() {
-  // Header 분리된 컴포넌트 사용
-  const header = renderHeader();
+  // Header 분리된 컴포넌트 사용 (문자열 반환)
+  const headerHtml = renderHeader();
   const gridContainer = createElement('div');
   const leftColumn = createElement('div');
   const selectorContainer = createElement('div');
-  // OrderSummary 분리된 컴포넌트 사용
-  const rightColumn = renderOrderSummary();
-  // ManualOverlay 분리된 컴포넌트 사용
-  const { manualToggle, manualOverlay } = renderManualOverlay();
+  // OrderSummary 분리된 컴포넌트 사용 (문자열 반환)
+  const rightColumnHtml = renderOrderSummary();
+  // ManualOverlay 분리된 컴포넌트 사용 (문자열 반환)
+  const { manualToggleHtml, manualOverlayHtml } = renderManualOverlay();
   totalAmt = 0;
   itemCnt = 0;
   lastSel = null;
@@ -59,13 +55,41 @@ function main() {
   cartDisp = createElement('div');
   cartDisp.id = 'cart-items';
   leftColumn.appendChild(cartDisp);
-  sum = rightColumn.querySelector('#cart-total');
+  // rightColumn 삽입 (유틸 사용)
+  const rightColumnEl = htmlToElement(rightColumnHtml);
+  sum = rightColumnEl.querySelector('#cart-total');
   gridContainer.appendChild(leftColumn);
-  gridContainer.appendChild(rightColumn);
-  root.appendChild(header);
+  gridContainer.appendChild(rightColumnEl);
+  // header 문자열을 DOM에 삽입 (유틸 사용)
+  const headerEl = htmlToElement(headerHtml);
+  root.appendChild(headerEl);
   root.appendChild(gridContainer);
-  root.appendChild(manualToggle);
-  root.appendChild(manualOverlay);
+  // ManualOverlay 삽입 (유틸 사용)
+  const manualToggleBtn = htmlToElement(manualToggleHtml);
+  root.appendChild(manualToggleBtn);
+  const manualOverlayDiv = htmlToElement(manualOverlayHtml);
+  root.appendChild(manualOverlayDiv);
+  // ManualOverlay 이벤트 연결
+  manualToggleBtn.addEventListener('click', () => {
+    manualOverlayDiv.classList.toggle('hidden');
+    const manualColumn = manualOverlayDiv.querySelector('#manual-column');
+    manualColumn.classList.toggle('translate-x-full');
+  });
+  manualOverlayDiv.addEventListener('click', (e) => {
+    if (e.target === manualOverlayDiv) {
+      manualOverlayDiv.classList.add('hidden');
+      const manualColumn = manualOverlayDiv.querySelector('#manual-column');
+      manualColumn.classList.add('translate-x-full');
+    }
+  });
+  const manualCloseBtn = manualOverlayDiv.querySelector('#manual-close');
+  if (manualCloseBtn) {
+    manualCloseBtn.addEventListener('click', () => {
+      manualOverlayDiv.classList.add('hidden');
+      const manualColumn = manualOverlayDiv.querySelector('#manual-column');
+      manualColumn.classList.add('translate-x-full');
+    });
+  }
   onUpdateSelectOptions();
   handleCalculateCartStuff();
 
@@ -172,7 +196,7 @@ function handleCalculateCartStuff() {
   let savedAmount = 0;
   let stockMsg = '';
   let previousCount = 0;
-  let points = 0;
+  // let points = 0;
   let discRate = 0;
   totalAmt = 0;
   itemCnt = 0;
@@ -311,17 +335,7 @@ function handleCalculateCartStuff() {
     totalDiv.textContent = formatPrice(Math.round(totalAmt));
   }
 
-  const loyaltyPointsDiv = document.getElementById('loyalty-points');
-  if (loyaltyPointsDiv) {
-    points = Math.floor(totalAmt / CALCULATION_CONSTANTS.POINT_BASE_AMOUNT);
-    if (points > 0) {
-      loyaltyPointsDiv.textContent = '적립 포인트: ' + points + 'p';
-      loyaltyPointsDiv.style.display = 'block';
-    } else {
-      loyaltyPointsDiv.textContent = '적립 포인트: 0p';
-      loyaltyPointsDiv.style.display = 'block';
-    }
-  }
+  // 포인트 계산 및 표시(React 스타일 분리)
 
   const discountInfoDiv = document.getElementById('discount-info');
   discountInfoDiv.innerHTML = '';
@@ -359,87 +373,25 @@ function handleCalculateCartStuff() {
     }
   }
   stockInfo.textContent = stockMsg;
+
   handleStockInfoUpdate();
-  doRenderBonusPoints();
-}
 
-function doRenderBonusPoints() {
-  const nodes = cartDisp.children;
-  const basePoints = Math.floor(totalAmt / CALCULATION_CONSTANTS.POINT_BASE_AMOUNT);
-  let finalPoints = 0;
-  const pointsDetail = [];
-  let hasKeyboard = false;
-  let hasMouse = false;
-  let hasMonitorArm = false;
-  let product = null;
+  // React 스타일: 포인트 계산 및 렌더링 분리 호출 (UI 문자열 반환)
+  const { points, details } = calculateBonusPoints({
+    cartItems: cartDisp.children,
+    products,
+    itemCnt,
+    totalAmt,
+  });
   const ptsTag = document.getElementById('loyalty-points');
-
-  if (cartDisp.children.length === 0) {
-    if (ptsTag) ptsTag.style.display = 'none';
-    return;
-  }
-
-  if (basePoints > 0) {
-    finalPoints = basePoints;
-    pointsDetail.push('기본: ' + basePoints + 'p');
-  }
-  if (new Date().getDay() === DISCOUNT_RATES.TUESDAY_DAY) {
-    if (basePoints > 0) {
-      finalPoints = basePoints * POINT_RATES.TUESDAY_BONUS_MULTIPLIER;
-      pointsDetail.push('화요일 2배');
-    }
-  }
-
-  for (const node of nodes) {
-    for (let pIdx = 0; pIdx < products.length; pIdx++) {
-      if (products[pIdx].id === node.id) {
-        product = products[pIdx];
-        break;
-      }
-    }
-    if (!product) continue;
-    if (product.id === PRODUCT_IDS.KEYBOARD) {
-      hasKeyboard = true;
-    } else if (product.id === PRODUCT_IDS.MOUSE) {
-      hasMouse = true;
-    } else if (product.id === PRODUCT_IDS.MONITOR_ARM) {
-      hasMonitorArm = true;
-    }
-  }
-
-  if (hasKeyboard && hasMouse) {
-    finalPoints = finalPoints + POINT_RATES.COMBO_BONUS.KEYBOARD_MOUSE;
-    pointsDetail.push('키보드+마우스 세트 +' + POINT_RATES.COMBO_BONUS.KEYBOARD_MOUSE + 'p');
-  }
-  if (hasKeyboard && hasMouse && hasMonitorArm) {
-    finalPoints = finalPoints + POINT_RATES.COMBO_BONUS.FULL_SET;
-    pointsDetail.push('풀세트 구매 +' + POINT_RATES.COMBO_BONUS.FULL_SET + 'p');
-  }
-  if (itemCnt >= QUANTITY_THRESHOLDS.BONUS_TIER_3) {
-    finalPoints = finalPoints + POINT_RATES.QUANTITY_BONUS.TIER_3;
-    pointsDetail.push('대량구매(30개+) +' + POINT_RATES.QUANTITY_BONUS.TIER_3 + 'p');
-  } else if (itemCnt >= QUANTITY_THRESHOLDS.BONUS_TIER_2) {
-    finalPoints = finalPoints + POINT_RATES.QUANTITY_BONUS.TIER_2;
-    pointsDetail.push('대량구매(20개+) +' + POINT_RATES.QUANTITY_BONUS.TIER_2 + 'p');
-  } else if (itemCnt >= QUANTITY_THRESHOLDS.BONUS_TIER_1) {
-    finalPoints = finalPoints + POINT_RATES.QUANTITY_BONUS.TIER_1;
-    pointsDetail.push('대량구매(10개+) +' + POINT_RATES.QUANTITY_BONUS.TIER_1 + 'p');
-  }
-
-  bonusPts = finalPoints;
   if (ptsTag) {
-    if (bonusPts > 0) {
-      ptsTag.innerHTML =
-        '<div>적립 포인트: <span class="font-bold">' +
-        bonusPts +
-        'p</span></div>' +
-        '<div class="text-2xs opacity-70 mt-1">' +
-        pointsDetail.join(', ') +
-        '</div>';
-      ptsTag.style.display = 'block';
+    const html = BonusPoints({ points, details });
+    if (html === 'none') {
+      ptsTag.style.display = 'none';
+      ptsTag.innerHTML = '';
     } else {
-      ptsTag.textContent = '적립 포인트: 0p';
       ptsTag.style.display = 'block';
+      ptsTag.innerHTML = html;
     }
   }
 }
@@ -453,6 +405,7 @@ function doRenderBonusPoints() {
 //     totalStock += currentProduct.q;
 //   }
 //   return totalStock;
+
 // }
 
 function handleStockInfoUpdate() {
