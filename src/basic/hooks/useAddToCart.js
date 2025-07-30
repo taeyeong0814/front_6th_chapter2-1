@@ -6,15 +6,9 @@ export function addItemToCart(products, cartItems, selectedId) {
   const product = products[idx];
   if (!product || product.quantity <= 0) return { updatedProducts: products, addResult: null };
 
-  // 카트에 이미 있는지 확인
-  let cartQty = 0;
-  for (let i = 0; i < cartItems.length; i++) {
-    if (cartItems[i].id === selectedId) {
-      const qtyElem = cartItems[i].querySelector('.quantity-number');
-      cartQty = parseInt(qtyElem.textContent);
-      break;
-    }
-  }
+  // 카트에 이미 있는지 확인 (find로 대체)
+  const cartItem = Array.from(cartItems).find((item) => item.id === selectedId);
+  const cartQty = cartItem ? parseInt(cartItem.querySelector('.quantity-number').textContent) : 0;
 
   // 실제 남은 재고(카트에 담긴 수량 + 남은 수량)
   const availableQty = product.quantity + cartQty;

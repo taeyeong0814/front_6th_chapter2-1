@@ -9,7 +9,7 @@ export function calculateBonusPoints({ cartItems, products, itemCnt, totalAmt })
   let hasKeyboard = false;
   let hasMouse = false;
   let hasMonitorArm = false;
-  let product = null;
+  // let product = null;
 
   if (cartItems.length === 0) {
     return { points: 0, details: [] };
@@ -26,22 +26,17 @@ export function calculateBonusPoints({ cartItems, products, itemCnt, totalAmt })
     }
   }
 
-  for (const node of cartItems) {
-    for (let pIdx = 0; pIdx < products.length; pIdx++) {
-      if (products[pIdx].id === node.id) {
-        product = products[pIdx];
-        break;
-      }
-    }
-    if (!product) continue;
-    if (product.id === PRODUCT_IDS.KEYBOARD) {
+  Array.from(cartItems).forEach((node) => {
+    const foundProduct = products.find((p) => p.id === node.id);
+    if (!foundProduct) return;
+    if (foundProduct.id === PRODUCT_IDS.KEYBOARD) {
       hasKeyboard = true;
-    } else if (product.id === PRODUCT_IDS.MOUSE) {
+    } else if (foundProduct.id === PRODUCT_IDS.MOUSE) {
       hasMouse = true;
-    } else if (product.id === PRODUCT_IDS.MONITOR_ARM) {
+    } else if (foundProduct.id === PRODUCT_IDS.MONITOR_ARM) {
       hasMonitorArm = true;
     }
-  }
+  });
 
   if (hasKeyboard && hasMouse) {
     finalPoints = finalPoints + POINT_RATES.COMBO_BONUS.KEYBOARD_MOUSE;

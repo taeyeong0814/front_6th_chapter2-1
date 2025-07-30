@@ -128,9 +128,9 @@ function main() {
     if (!addResult) return;
 
     // 실제 products 배열 업데이트
-    for (let i = 0; i < products.length; i++) {
-      products[i].quantity = updatedProducts[i].quantity;
-    }
+    products.forEach((p, i) => {
+      p.quantity = updatedProducts[i].quantity;
+    });
 
     if (addResult.error === 'out-of-stock') {
       alert('재고가 부족합니다.');
@@ -176,7 +176,6 @@ function handleCalculateCartStuff(cartDisp, stockInfo) {
   let savedAmount = 0;
   let stockMsg = '';
   let previousCount = 0;
-  // let points = 0;
   let discRate = 0;
   let totalAmt = 0;
   let itemCnt = 0;
@@ -187,7 +186,7 @@ function handleCalculateCartStuff(cartDisp, stockInfo) {
     .forEach((p) => lowStockItems.push(p.name));
 
   // 카트 내 각 상품별 합계 및 할인 계산
-  Array.from(cartItems).forEach((cartItem) => {
+  Array.from(cartItems).reduce((_, cartItem) => {
     const curItem = products.find((p) => p.id === cartItem.id);
     if (!curItem) return;
     const qtyElem = cartItem.querySelector('.quantity-number');
@@ -210,7 +209,8 @@ function handleCalculateCartStuff(cartDisp, stockInfo) {
       }
     }
     totalAmt += itemTot * (1 - disc);
-  });
+    return null;
+  }, null);
 
   // 대량구매 할인
   const originalTotal = subTot;
@@ -242,7 +242,7 @@ function handleCalculateCartStuff(cartDisp, stockInfo) {
   const summaryDetails = document.getElementById('summary-details');
   summaryDetails.innerHTML = '';
   if (subTot > 0) {
-    Array.from(cartItems).forEach((cartItem) => {
+    Array.from(cartItems).map((cartItem) => {
       const curItem = products.find((p) => p.id === cartItem.id);
       if (!curItem) return;
       const qtyElem = cartItem.querySelector('.quantity-number');
@@ -327,15 +327,16 @@ function handleCalculateCartStuff(cartDisp, stockInfo) {
   }
 
   // 재고 메시지
-  products.forEach((item) => {
+  stockMsg = products.reduce((msg, item) => {
     if (item.quantity < 5) {
       if (item.quantity > 0) {
-        stockMsg += item.name + ': 재고 부족 (' + item.quantity + '개 남음)\n';
+        return msg + item.name + ': 재고 부족 (' + item.quantity + '개 남음)\n';
       } else {
-        stockMsg += item.name + ': 품절\n';
+        return msg + item.name + ': 품절\n';
       }
     }
-  });
+    return msg;
+  }, '');
   stockInfo.textContent = stockMsg;
 
   handleStockInfoUpdate(stockInfo);
