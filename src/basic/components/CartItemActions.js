@@ -8,13 +8,7 @@ export function handleCartItemAction(event, products, cartDisp, updateSelectOpti
   if (!itemElem) return;
   const qtyElem = itemElem.querySelector('.quantity-number');
   if (tgt.classList.contains('quantity-change') || tgt.classList.contains('remove-item')) {
-    let prod = null;
-    for (let prdIdx = 0; prdIdx < products.length; prdIdx++) {
-      if (products[prdIdx].id === prodId) {
-        prod = products[prdIdx];
-        break;
-      }
-    }
+    const prod = products.find((p) => p.id === prodId);
     if (!prod) return;
     if (tgt.classList.contains('quantity-change')) {
       const qtyChange = parseInt(tgt.dataset.change);
