@@ -99,7 +99,10 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({ summary }) => {
             </div>
             {subTot > 0 && (
               <div id="loyalty-points" className="text-xs text-blue-400 mt-2 text-right">
-                적립 포인트: {points}p
+                <div>
+                  적립 포인트: <span className="font-bold">{points}p</span>
+                </div>
+                <div className="text-2xs opacity-70 mt-1">{summary.pointDetails}</div>
               </div>
             )}
           </div>
