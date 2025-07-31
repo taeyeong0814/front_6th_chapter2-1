@@ -2,7 +2,7 @@ import ProductPicker from './ProductPicker';
 
 const ShoppingCart = () => {
   return (
-    <div className="bg-white border border-gray-200 p-8 overflow-y-auto">
+    <>
       <ProductPicker />
       <div id="cart-items">
         <div className="grid grid-cols-[80px_1fr_auto] gap-5 py-5 border-b border-gray-100 first:pt-0 last:border-b-0 last:pb-0">
@@ -45,7 +45,7 @@ const ShoppingCart = () => {
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 
