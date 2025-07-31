@@ -17,7 +17,7 @@ interface ShoppingCartProps {
 const ShoppingCart: React.FC<ShoppingCartProps> = ({ products, cartItems, setCartItems }) => {
   return (
     <>
-      <ProductPicker />
+      <ProductPicker products={products} cartItems={cartItems} setCartItems={setCartItems} />
       <div id="cart-items">
         {cartItems.map((item) => {
           const product = products.find((p) => p.id === item.productId);
