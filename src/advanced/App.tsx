@@ -4,7 +4,7 @@ import ShoppingCart from './components/cart/ShoppingCart';
 import GuideToggle from './components/guide/GuideToggle';
 import Header from './components/layout/Header';
 import OrderSummary from './components/order/OrderSummary';
-// basic의 productList.js에서 상품 데이터 직접 복사
+import { useOrderSummary } from './hooks/useOrderSummary';
 import { PRODUCTS } from './lib/product';
 import type { Product } from './types';
 
@@ -16,6 +16,7 @@ const App: React.FC = () => {
 
   // 장바구니에 담긴 상품의 총 수량 계산
   const cartTotalCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+  const orderSummary = useOrderSummary(products, cartItems);
 
   return (
     <>
@@ -26,22 +27,7 @@ const App: React.FC = () => {
             <GuideToggle />
             <ShoppingCart products={products} cartItems={cartItems} setCartItems={setCartItems} />
           </div>
-          <OrderSummary
-            summary={{
-              itemCnt: cartItems.length,
-              subTot: 0, // 실제 계산 로직 필요
-              totalAmt: 0, // 실제 계산 로직 필요
-              discRate: 0,
-              savedAmount: 0,
-              itemDiscounts: [],
-              isTuesday: false,
-              stockMsg: '',
-              points: 0,
-              pointDetails: '',
-              products,
-              cartItems,
-            }}
-          />
+          <OrderSummary summary={{ ...orderSummary, products, cartItems }} />
         </div>
       </div>
     </>
