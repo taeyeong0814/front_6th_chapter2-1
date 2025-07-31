@@ -31,8 +31,27 @@ const ShoppingCart: React.FC<ShoppingCartProps> = ({ products, cartItems, setCar
                 <div className="absolute top-1/2 left-1/2 w-[60%] h-[60%] bg-white/10 -translate-x-1/2 -translate-y-1/2 rotate-45" />
               </div>
               <div>
-                <h3 className="text-base font-normal mb-1 tracking-tight">{product.name}</h3>
-                <p className="text-xs text-black mb-3">₩{product.price.toLocaleString()}</p>
+                <h3 className="text-base font-normal mb-1 tracking-tight">
+                  {product.onSale && product.suggestSale ? (
+                    <span className="text-purple-600 font-bold">⚡💝{product.name}</span>
+                  ) : product.onSale ? (
+                    <span className="text-red-500 font-bold">⚡{product.name}</span>
+                  ) : product.suggestSale ? (
+                    <span className="text-blue-500 font-bold">💝{product.name}</span>
+                  ) : (
+                    product.name
+                  )}
+                </h3>
+                <p className="text-xs mb-3">
+                  {product.discountPrice !== product.price ? (
+                    <>
+                      <span className="line-through text-gray-400 mr-1">₩{product.price.toLocaleString()}</span>
+                      <span className="text-black font-bold">₩{product.discountPrice.toLocaleString()}</span>
+                    </>
+                  ) : (
+                    <span className="text-black">₩{product.price.toLocaleString()}</span>
+                  )}
+                </p>
                 <div className="flex items-center gap-4">
                   <button
                     onClick={() =>

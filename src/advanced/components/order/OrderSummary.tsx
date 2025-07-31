@@ -24,8 +24,7 @@ function formatPrice(price: number) {
 }
 
 const OrderSummary: React.FC<OrderSummaryProps> = ({ summary }) => {
-  const { itemCnt, subTot, totalAmt, discRate, savedAmount, itemDiscounts, isTuesday, points, products, cartItems } =
-    summary;
+  const { itemCnt, subTot, totalAmt, discRate, savedAmount, isTuesday, points, products, cartItems } = summary;
 
   return (
     <aside className="bg-black text-white p-8 flex flex-col w-full min-w-0 max-w-none h-full">
@@ -58,13 +57,17 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({ summary }) => {
                   <span className="text-xs">-25%</span>
                 </div>
               )}
-              {itemDiscounts.length > 0 &&
-                itemDiscounts.map((item) => (
-                  <div key={item.name} className="flex justify-between text-sm tracking-wide text-green-400">
-                    <span className="text-xs">{item.name} (10개↑)</span>
-                    <span className="text-xs">-{item.discount}%</span>
-                  </div>
-                ))}
+              {/* 30개 미만일 때만 개별상품 할인 노출 */}
+              {itemCnt < 30 && summary.itemDiscounts.length > 0 && (
+                <>
+                  {summary.itemDiscounts.map((item) => (
+                    <div key={item.name} className="flex justify-between text-sm tracking-wide text-green-400">
+                      <span className="text-xs">{item.name} (10개↑)</span>
+                      <span className="text-xs">-{item.discount}%</span>
+                    </div>
+                  ))}
+                </>
+              )}
               {isTuesday && totalAmt > 0 && (
                 <div className="flex justify-between text-sm tracking-wide text-purple-400">
                   <span className="text-xs">🌟 화요일 추가 할인</span>
