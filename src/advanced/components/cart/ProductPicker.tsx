@@ -49,7 +49,8 @@ const ProductPicker: React.FC<ProductPickerProps> = ({ products, cartItems, setC
   const selectedProduct = products.find((p) => p.id === selectedId);
   const selectedCartItem = cartItems.find((item) => item.productId === selectedId);
   const selectedCartQty = selectedCartItem ? selectedCartItem.quantity : 0;
-  const isSelectedSoldOut = selectedProduct ? selectedProduct.quantity - selectedCartQty <= 0 : true;
+  const availableQty = selectedProduct ? selectedProduct.quantity - selectedCartQty : 0;
+  const isSelectedSoldOut = availableQty <= 0;
 
   return (
     <div className="mb-6 pb-6 border-b border-gray-200">
@@ -75,8 +76,22 @@ const ProductPicker: React.FC<ProductPickerProps> = ({ products, cartItems, setC
       >
         Add to Cart
       </button>
-      <div id="stock-status" className="text-xs text-red-500 mt-3 whitespace-pre-line">
-        {selectedProduct ? (isSelectedSoldOut ? `${selectedProduct.name}: 품절` : error) : ''}
+      <div id="stock-status" className="text-xs mt-3 whitespace-pre-line">
+        {products.some((p) => p.quantity === 0) ? (
+          products
+            .filter((p) => p.quantity === 0)
+            .map((p) => {
+              return <div key={p.id} className="text-red-500">{`${p.name}: 품절`}</div>;
+            })
+        ) : selectedProduct ? (
+          selectedProduct.quantity - selectedCartQty <= 5 ? (
+            <span className="text-red-500">{`${selectedProduct.name}: 재고 부족 (${selectedProduct.quantity - selectedCartQty}개 남음)`}</span>
+          ) : (
+            error
+          )
+        ) : (
+          ''
+        )}
       </div>
     </div>
   );
