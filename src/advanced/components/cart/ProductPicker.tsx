@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 
 import type { Product } from '../../types';
+import { ProductOptionLabel } from '../../utils/productOption.tsx';
 
 interface CartItem {
   productId: string;
@@ -44,6 +45,12 @@ const ProductPicker: React.FC<ProductPickerProps> = ({ products, cartItems, setC
     });
   };
 
+  // 선택된 상품 정보 미리 계산
+  const selectedProduct = products.find((p) => p.id === selectedId);
+  const selectedCartItem = cartItems.find((item) => item.productId === selectedId);
+  const selectedCartQty = selectedCartItem ? selectedCartItem.quantity : 0;
+  const isSelectedSoldOut = selectedProduct ? selectedProduct.quantity - selectedCartQty <= 0 : true;
+
   return (
     <div className="mb-6 pb-6 border-b border-gray-200">
       <select
@@ -52,34 +59,24 @@ const ProductPicker: React.FC<ProductPickerProps> = ({ products, cartItems, setC
         value={selectedId}
         onChange={(e) => setSelectedId(e.target.value)}
       >
-        {products.map((product) => (
-          <option key={product.id} value={product.id}>
-            {product.name} - {product.price}원
-          </option>
-        ))}
+        {products.map((product) => {
+          const isSoldOut = product.quantity === 0;
+          return (
+            <option key={product.id} value={product.id} disabled={isSoldOut}>
+              <ProductOptionLabel product={product} />
+            </option>
+          );
+        })}
       </select>
       <button
         className="w-full py-3 bg-black text-white text-sm font-medium uppercase tracking-wider hover:bg-gray-800 transition-all"
         onClick={handleAddToCart}
-        disabled={(() => {
-          const product = products.find((p) => p.id === selectedId);
-          if (!product) return true;
-          const cartItem = cartItems.find((item) => item.productId === selectedId);
-          const cartQty = cartItem ? cartItem.quantity : 0;
-          return product.quantity - cartQty <= 0;
-        })()}
+        disabled={isSelectedSoldOut}
       >
         Add to Cart
       </button>
       <div id="stock-status" className="text-xs text-red-500 mt-3 whitespace-pre-line">
-        {(() => {
-          const product = products.find((p) => p.id === selectedId);
-          if (!product) return '';
-          const cartItem = cartItems.find((item) => item.productId === selectedId);
-          const cartQty = cartItem ? cartItem.quantity : 0;
-          if (product.quantity - cartQty <= 0) return `${product.name}: 품절`;
-          return error;
-        })()}
+        {selectedProduct ? (isSelectedSoldOut ? `${selectedProduct.name}: 품절` : error) : ''}
       </div>
     </div>
   );
