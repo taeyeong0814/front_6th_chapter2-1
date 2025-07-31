@@ -1,182 +1,106 @@
-import { createCartItemElement } from './components/CartItem.js';
-import { handleCartItemAction } from './components/CartItemActions.js';
-import { CartItemDisplay } from './components/CartItemDisplay.js';
 import { renderCartSummaryUI } from './components/CartSummary.js';
+import { calculateCartSummary } from './hooks/useCartSummary.js';
+import { getProducts, setProducts } from './hooks/useProducts.js';
+
+// 항상 최신 products를 인자로 받아 UI를 갱신하는 함수
+function handleCalculateCartStuff(cartDisp, stockInfo, sum, productsArg) {
+  const productsToUse = productsArg || getProducts();
+  const summary = calculateCartSummary(productsToUse, cartDisp.children, new Date());
+  renderCartSummaryUI(summary, { cartDisp, stockInfo, sum, products: productsToUse });
+}
+
+// window에 등록하여 cartEvents 등에서 호출 가능하게 함 (products 인자 추가)
+window.handleCalculateCartStuff = handleCalculateCartStuff;
 import { renderHeader } from './components/Header.js';
 import { renderManualOverlay } from './components/ManualOverlay.js';
 import { renderOrderSummary } from './components/OrderSummary.js';
-import { products } from './data/productList.js';
-import { addItemToCart } from './hooks/useAddToCart.js';
-import { getUpdatedCartItems } from './hooks/useCartItems.js';
-import { calculateCartSummary } from './hooks/useCartSummary.js';
-import { DISCOUNT_RATES, TIME_DELAYS } from './utils/constants.js';
+import { bindCartEvents } from './events/cartEvents.js';
+import { bindManualOverlayEvents } from './events/manualOverlayEvents.js';
+import { bindPromotionEvents } from './events/promotionEvents.js';
 import { createElement } from './utils/dom.js';
 import { htmlToElement } from './utils/htmlToElement.js';
-import { updateSelectOptions } from './utils/updateSelectOptions.js';
 
-function main() {
-  // Header 분리된 컴포넌트 사용 (문자열 반환)
-  const headerHtml = renderHeader();
-  const gridContainer = createElement('div');
-  const leftColumn = createElement('div');
+// 헤더 영역을 생성하여 반환
+function createHeader() {
+  return htmlToElement(renderHeader());
+}
+
+// 상품 선택 셀렉트, 장바구니 추가 버튼, 재고 표시 영역을 생성하여 반환
+function createProductSelector() {
   const selectorContainer = createElement('div');
-  // OrderSummary 분리된 컴포넌트 사용 (문자열 반환)
-  const rightColumnHtml = renderOrderSummary();
-  // ManualOverlay 분리된 컴포넌트 사용 (문자열 반환)
-  const { manualToggleHtml, manualOverlayHtml } = renderManualOverlay();
-  let lastSel = null;
-
-  const root = document.getElementById('app');
+  selectorContainer.className = 'mb-6 pb-6 border-b border-gray-200';
   const sel = createElement('select');
   sel.id = 'product-select';
-  leftColumn['className'] = 'bg-white border border-gray-200 p-8 overflow-y-auto';
-  selectorContainer.className = 'mb-6 pb-6 border-b border-gray-200';
   sel.className = 'w-full p-3 border border-gray-300 rounded-lg text-base mb-3';
-  gridContainer.className = 'grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6 flex-1 overflow-hidden';
   const addBtn = createElement('button');
-  const stockInfo = createElement('div');
   addBtn.id = 'add-to-cart';
-  stockInfo.id = 'stock-status';
-  stockInfo.className = 'text-xs text-red-500 mt-3 whitespace-pre-line';
   addBtn.innerHTML = 'Add to Cart';
   addBtn.className =
     'w-full py-3 bg-black text-white text-sm font-medium uppercase tracking-wider hover:bg-gray-800 transition-all';
+  const stockInfo = createElement('div');
+  stockInfo.id = 'stock-status';
+  stockInfo.className = 'text-xs text-red-500 mt-3 whitespace-pre-line';
   selectorContainer.appendChild(sel);
   selectorContainer.appendChild(addBtn);
   selectorContainer.appendChild(stockInfo);
+  return { selectorContainer, sel, addBtn, stockInfo };
+}
+
+// 왼쪽 컬럼(상품 선택/버튼/재고 + 장바구니 목록) 생성하여 반환
+function createLeftColumn() {
+  const leftColumn = createElement('div');
+  leftColumn.className = 'bg-white border border-gray-200 p-8 overflow-y-auto';
+  const { selectorContainer, sel, addBtn, stockInfo } = createProductSelector();
   leftColumn.appendChild(selectorContainer);
   const cartDisp = createElement('div');
   cartDisp.id = 'cart-items';
   leftColumn.appendChild(cartDisp);
-  // rightColumn 삽입 (유틸 사용)
-  const rightColumnEl = htmlToElement(rightColumnHtml);
+  return { leftColumn, sel, addBtn, stockInfo, cartDisp };
+}
+
+// 오른쪽 컬럼(주문 요약 영역) 생성하여 반환
+function createRightColumn() {
+  const rightColumnEl = htmlToElement(renderOrderSummary());
   const sum = rightColumnEl.querySelector('#cart-total');
+  return { rightColumnEl, sum };
+}
+
+// 매뉴얼 오버레이(버튼, 오버레이 div) 생성하여 반환
+function createManualOverlay() {
+  const { manualToggleHtml, manualOverlayHtml } = renderManualOverlay();
+  const manualToggleBtn = htmlToElement(manualToggleHtml);
+  const manualOverlayDiv = htmlToElement(manualOverlayHtml);
+  return { manualToggleBtn, manualOverlayDiv };
+}
+
+// 전체 UI를 조립하여 DOM에 추가하고, 주요 엘리먼트 참조 반환
+function setupUI() {
+  const root = document.getElementById('app');
+  const headerEl = createHeader();
+  const gridContainer = createElement('div');
+  gridContainer.className = 'grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6 flex-1 overflow-hidden';
+  const { leftColumn, sel, addBtn, stockInfo, cartDisp } = createLeftColumn();
+  const { rightColumnEl, sum } = createRightColumn();
   gridContainer.appendChild(leftColumn);
   gridContainer.appendChild(rightColumnEl);
-  // header 문자열을 DOM에 삽입 (유틸 사용)
-  const headerEl = htmlToElement(headerHtml);
+  const { manualToggleBtn, manualOverlayDiv } = createManualOverlay();
   root.appendChild(headerEl);
   root.appendChild(gridContainer);
-  // ManualOverlay 삽입 (유틸 사용)
-  const manualToggleBtn = htmlToElement(manualToggleHtml);
   root.appendChild(manualToggleBtn);
-  const manualOverlayDiv = htmlToElement(manualOverlayHtml);
   root.appendChild(manualOverlayDiv);
-  // ManualOverlay 이벤트 연결
-  manualToggleBtn.addEventListener('click', () => {
-    manualOverlayDiv.classList.toggle('hidden');
-    const manualColumn = manualOverlayDiv.querySelector('#manual-column');
-    manualColumn.classList.toggle('translate-x-full');
-  });
-  manualOverlayDiv.addEventListener('click', (e) => {
-    if (e.target === manualOverlayDiv) {
-      manualOverlayDiv.classList.add('hidden');
-      const manualColumn = manualOverlayDiv.querySelector('#manual-column');
-      manualColumn.classList.add('translate-x-full');
-    }
-  });
-  const manualCloseBtn = manualOverlayDiv.querySelector('#manual-close');
-  if (manualCloseBtn) {
-    manualCloseBtn.addEventListener('click', () => {
-      manualOverlayDiv.classList.add('hidden');
-      const manualColumn = manualOverlayDiv.querySelector('#manual-column');
-      manualColumn.classList.add('translate-x-full');
-    });
-  }
-  updateSelectOptions(sel, products);
-  handleCalculateCartStuff(cartDisp, stockInfo, sum);
-
-  const lightningDelay = Math.random() * TIME_DELAYS.LIGHTNING_SALE_MAX;
-  setTimeout(() => {
-    setInterval(function () {
-      const luckyIdx = Math.floor(Math.random() * products.length);
-      const luckyItem = products[luckyIdx];
-      if (luckyItem.quantity > 0 && !luckyItem.onSale) {
-        luckyItem.discountPrice = Math.round(luckyItem.price * (1 - DISCOUNT_RATES.LIGHTNING_SALE_RATE));
-        luckyItem.onSale = true;
-        alert('⚡번개세일! ' + luckyItem.name + `이(가) ${DISCOUNT_RATES.LIGHTNING_SALE_RATE * 100}% 할인 중입니다!`);
-        updateSelectOptions(sel, products);
-        doUpdatePricesInCart(cartDisp, stockInfo, sum);
-      }
-    }, TIME_DELAYS.LIGHTNING_SALE_INTERVAL);
-  }, lightningDelay);
-
-  setTimeout(function () {
-    setInterval(function () {
-      if (lastSel) {
-        const suggest = products.find((p) => p.id !== lastSel && p.quantity > 0 && !p.suggestSale);
-        if (suggest) {
-          alert(
-            '💝 ' +
-              suggest.name +
-              `은(는) 어떠세요? 지금 구매하시면 ${DISCOUNT_RATES.SUGGEST_SALE_RATE * 100}% 추가 할인!`
-          );
-          suggest.discountPrice = Math.round(suggest.discountPrice * (1 - DISCOUNT_RATES.SUGGEST_SALE_RATE));
-          suggest.suggestSale = true;
-          updateSelectOptions(sel, products);
-          doUpdatePricesInCart(cartDisp, stockInfo, sum);
-        }
-      }
-    }, TIME_DELAYS.SUGGEST_SALE_INTERVAL);
-  }, Math.random() * TIME_DELAYS.SUGGEST_SALE_MAX);
-  // addBtn, cartDisp 이벤트 핸들러에 stockInfo 전달
-  addBtn.addEventListener('click', function () {
-    const selItem = sel.value;
-    const { updatedProducts, addResult } = addItemToCart(products, cartDisp.children, selItem);
-    if (!addResult) return;
-
-    // 실제 products 배열 업데이트
-    products.forEach((p, i) => {
-      p.quantity = updatedProducts[i].quantity;
-    });
-
-    if (addResult.error === 'out-of-stock') {
-      alert('재고가 부족합니다.');
-      return;
-    }
-
-    // UI 처리 (컴포넌트 분리)
-    if (addResult.isNew) {
-      const newItem = createCartItemElement(addResult.item, 1);
-      cartDisp.appendChild(newItem);
-    } else {
-      const item = document.getElementById(addResult.item.id);
-      if (item) {
-        const qtyElem = item.querySelector('.quantity-number');
-        qtyElem.textContent = addResult.newQty;
-      }
-    }
-    handleCalculateCartStuff(cartDisp, stockInfo, sum);
-    lastSel = selItem;
-  });
-
-  cartDisp.addEventListener('click', function (event) {
-    handleCartItemAction(
-      event,
-      products,
-      cartDisp,
-      updateSelectOptions,
-      function () {
-        handleCalculateCartStuff(cartDisp, stockInfo, sum);
-      },
-      sel
-    );
-  });
+  return { sel, addBtn, stockInfo, cartDisp, sum, manualToggleBtn, manualOverlayDiv };
 }
 
-// 3. 기존 함수는 두 함수만 호출하도록 단순화
-function handleCalculateCartStuff(cartDisp, stockInfo, sum) {
-  const summary = calculateCartSummary(products, cartDisp.children, new Date());
-  renderCartSummaryUI(summary, { cartDisp, stockInfo, sum, products });
-}
-
-// UI 적용 함수: 카트 내 상품 UI 업데이트 및 합계 재계산
-function doUpdatePricesInCart(cartDisp, stockInfo, sum) {
-  const updated = getUpdatedCartItems(cartDisp.children, products);
-  updated.forEach(({ cartItem, product }) => {
-    CartItemDisplay(cartItem, product);
+function main() {
+  const { sel, addBtn, stockInfo, cartDisp, sum, manualToggleBtn, manualOverlayDiv } = setupUI();
+  bindManualOverlayEvents(manualToggleBtn, manualOverlayDiv);
+  // cartEvents에서 products를 갱신할 수 있도록 setter/getter 제공
+  const getLastSel = bindCartEvents(sel, addBtn, stockInfo, cartDisp, sum, {
+    setProducts,
+    getProducts,
+    handleCalculateCartStuff,
   });
-  handleCalculateCartStuff(cartDisp, stockInfo, sum);
+  bindPromotionEvents(sel, cartDisp, stockInfo, sum, getLastSel);
 }
 
 main();

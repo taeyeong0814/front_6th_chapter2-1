@@ -1,15 +1,12 @@
 import { CALCULATION_CONSTANTS, DISCOUNT_RATES, QUANTITY_THRESHOLDS } from '../utils/constants.js';
 import { calculateBonusPoints } from './useBonusPoints.js';
 
-// 순수 계산 함수: 할인, 포인트, 재고 등 계산만 담당
-export function calculateCartSummary(products, cartItems, today = new Date()) {
+// 카트 내 각 상품별 합계 및 할인 계산
+function calculateCartItemTotals(products, cartItems) {
   let subTot = 0;
   const itemDiscounts = [];
-  let discRate = 0;
   let totalAmt = 0;
   let itemCnt = 0;
-
-  // 카트 내 각 상품별 합계 및 할인 계산
   Array.from(cartItems).forEach((cartItem) => {
     const curItem = products.find((p) => p.id === cartItem.id);
     if (!curItem) return;
@@ -19,7 +16,6 @@ export function calculateCartSummary(products, cartItems, today = new Date()) {
     let disc = 0;
     itemCnt += q;
     subTot += itemTot;
-    // 할인율 적용
     if (q >= QUANTITY_THRESHOLDS.ITEM_DISCOUNT && curItem.discountRate) {
       disc = curItem.discountRate;
       if (disc > 0) {
@@ -28,37 +24,33 @@ export function calculateCartSummary(products, cartItems, today = new Date()) {
     }
     totalAmt += itemTot * (1 - disc);
   });
+  return { subTot, itemDiscounts, totalAmt, itemCnt };
+}
 
-  // 대량구매 할인
+// 대량구매/화요일 할인 계산
+function calculateTotalDiscount(subTot, totalAmt, itemCnt, today) {
   const originalTotal = subTot;
+  let discRate = 0;
+  let tuesdayApplied = false;
   if (itemCnt >= QUANTITY_THRESHOLDS.BULK_PURCHASE) {
     totalAmt = subTot * (1 - DISCOUNT_RATES.BULK_PURCHASE_RATE);
     discRate = DISCOUNT_RATES.BULK_PURCHASE_RATE;
   } else {
     discRate = subTot > 0 ? (subTot - totalAmt) / subTot : 0;
   }
-
-  // 화요일 추가 할인
   const isTuesday = today.getDay() === DISCOUNT_RATES.TUESDAY_DAY;
-  let tuesdayApplied = false;
-  let tuesdayDiscount = 0;
   if (isTuesday && totalAmt > 0) {
-    tuesdayDiscount = totalAmt * DISCOUNT_RATES.TUESDAY_SPECIAL_RATE;
+    const tuesdayDiscount = totalAmt * DISCOUNT_RATES.TUESDAY_SPECIAL_RATE;
     totalAmt = totalAmt - tuesdayDiscount;
     discRate = 1 - totalAmt / originalTotal;
     tuesdayApplied = true;
   }
+  return { finalTotal: totalAmt, discRate, tuesdayApplied, originalTotal };
+}
 
-  // 포인트 계산
-  const { points, details } = calculateBonusPoints({
-    cartItems,
-    products,
-    itemCnt,
-    totalAmt,
-  });
-
-  // 재고 메시지
-  const stockMsg = products.reduce((msg, item) => {
+// 재고 메시지 생성
+function getStockMessage(products) {
+  return products.reduce((msg, item) => {
     if (item.quantity < 5) {
       if (item.quantity > 0) {
         return msg + item.name + ': 재고 부족 (' + item.quantity + '개 남음)\n';
@@ -68,13 +60,30 @@ export function calculateCartSummary(products, cartItems, today = new Date()) {
     }
     return msg;
   }, '');
+}
 
+// 장바구니 요약 계산: 합계, 할인, 포인트, 재고 메시지 등 모든 비즈니스 계산을 순수 함수로 처리
+export function calculateCartSummary(products, cartItems, today = new Date()) {
+  const { subTot, itemDiscounts, totalAmt, itemCnt } = calculateCartItemTotals(products, cartItems);
+  const { finalTotal, discRate, tuesdayApplied, originalTotal } = calculateTotalDiscount(
+    subTot,
+    totalAmt,
+    itemCnt,
+    today
+  );
+  const { points, details } = calculateBonusPoints({
+    cartItems,
+    products,
+    itemCnt,
+    totalAmt: finalTotal,
+  });
+  const stockMsg = getStockMessage(products);
   return {
     itemCnt,
     subTot,
-    totalAmt,
+    totalAmt: finalTotal,
     discRate,
-    savedAmount: originalTotal - totalAmt,
+    savedAmount: originalTotal - finalTotal,
     itemDiscounts,
     isTuesday: tuesdayApplied,
     stockMsg,
