@@ -48,19 +48,7 @@ function calculateTotalDiscount(subTot, totalAmt, itemCnt, today) {
   return { finalTotal: totalAmt, discRate, tuesdayApplied, originalTotal };
 }
 
-// 재고 메시지 생성
-function getStockMessage(products) {
-  return products.reduce((msg, item) => {
-    if (item.quantity < 5) {
-      if (item.quantity > 0) {
-        return msg + item.name + ': 재고 부족 (' + item.quantity + '개 남음)\n';
-      } else {
-        return msg + item.name + ': 품절\n';
-      }
-    }
-    return msg;
-  }, '');
-}
+import { getStockInfoMessage } from './useStockInfo.js';
 
 // 장바구니 요약 계산: 합계, 할인, 포인트, 재고 메시지 등 모든 비즈니스 계산을 순수 함수로 처리
 export function calculateCartSummary(products, cartItems, today = new Date()) {
@@ -77,7 +65,7 @@ export function calculateCartSummary(products, cartItems, today = new Date()) {
     itemCnt,
     totalAmt: finalTotal,
   });
-  const stockMsg = getStockMessage(products);
+  const stockMsg = getStockInfoMessage(products);
   return {
     itemCnt,
     subTot,

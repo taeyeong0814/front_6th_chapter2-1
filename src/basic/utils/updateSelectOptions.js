@@ -1,11 +1,12 @@
 // 상품 셀렉트 옵션 갱신 함수
+import { UI_TEXTS } from './constants.js';
 import { QUANTITY_THRESHOLDS } from './constants.js';
 import { createElement } from './dom.js';
 
 function getOptionText(item) {
   switch (true) {
     case item.quantity === 0:
-      return `${item.name} - ${item.discountPrice}원 (품절)${item.onSale ? ' ⚡SALE' : ''}${item.suggestSale ? ' 💝추천' : ''}`;
+      return `${item.name} - ${item.discountPrice}원 (${UI_TEXTS.SOLD_OUT})${item.onSale ? ' ⚡SALE' : ''}${item.suggestSale ? ' 💝추천' : ''}`;
     case item.onSale && item.suggestSale:
       return `⚡💝${item.name} - ${item.price}원 → ${item.discountPrice}원 (25% SUPER SALE!)`;
     case item.onSale:

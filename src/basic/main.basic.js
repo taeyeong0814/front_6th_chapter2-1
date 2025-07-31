@@ -26,12 +26,14 @@ function createHeader() {
 }
 
 // 상품 선택 셀렉트, 장바구니 추가 버튼, 재고 표시 영역을 생성하여 반환
+import { UI_CLASSNAMES, UI_IDS } from './utils/constants.js';
+
 function createProductSelector() {
   const selectorContainer = createElement('div');
-  selectorContainer.className = 'mb-6 pb-6 border-b border-gray-200';
+  selectorContainer.className = UI_CLASSNAMES.SELECTOR_CONTAINER;
   const sel = createElement('select');
   sel.id = 'product-select';
-  sel.className = 'w-full p-3 border border-gray-300 rounded-lg text-base mb-3';
+  sel.className = UI_CLASSNAMES.SELECT;
   const addBtn = createElement('button');
   addBtn.id = 'add-to-cart';
   addBtn.innerHTML = 'Add to Cart';
@@ -39,7 +41,7 @@ function createProductSelector() {
     'w-full py-3 bg-black text-white text-sm font-medium uppercase tracking-wider hover:bg-gray-800 transition-all';
   const stockInfo = createElement('div');
   stockInfo.id = 'stock-status';
-  stockInfo.className = 'text-xs text-red-500 mt-3 whitespace-pre-line';
+  stockInfo.className = UI_CLASSNAMES.STOCK_INFO;
   selectorContainer.appendChild(sel);
   selectorContainer.appendChild(addBtn);
   selectorContainer.appendChild(stockInfo);
@@ -53,7 +55,7 @@ function createLeftColumn() {
   const { selectorContainer, sel, addBtn, stockInfo } = createProductSelector();
   leftColumn.appendChild(selectorContainer);
   const cartDisp = createElement('div');
-  cartDisp.id = 'cart-items';
+  cartDisp.id = UI_IDS.CART_ITEMS;
   leftColumn.appendChild(cartDisp);
   return { leftColumn, sel, addBtn, stockInfo, cartDisp };
 }
@@ -61,7 +63,7 @@ function createLeftColumn() {
 // 오른쪽 컬럼(주문 요약 영역) 생성하여 반환
 function createRightColumn() {
   const rightColumnEl = htmlToElement(renderOrderSummary());
-  const sum = rightColumnEl.querySelector('#cart-total');
+  const sum = rightColumnEl.querySelector(`#${UI_IDS.CART_TOTAL}`);
   return { rightColumnEl, sum };
 }
 

@@ -1,7 +1,6 @@
-// CartItemActions.js
 // 카트 내 수량 변경/삭제 등 UI 처리 및 상품 배열 업데이트 로직 분리
 
-export function handleCartItemAction(event, products, cartDisp, updateSelectOptions, handleCalculateCartStuff, sel) {
+export function handleCartItemAction(event, products, updateSelectOptions, handleCalculateCartStuff, sel) {
   const tgt = event.target;
   const prodId = tgt.dataset.productId;
   const itemElem = document.getElementById(prodId);

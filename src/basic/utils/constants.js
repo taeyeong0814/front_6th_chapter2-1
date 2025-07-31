@@ -150,3 +150,24 @@ export const PRODUCT_COMBOS = {
     name: '풀세트 구매',
   },
 };
+
+// UI 관련 상수 및 매직넘버를 한 곳에 모아 관리합니다.
+
+export const UI_CLASSNAMES = {
+  SELECTOR_CONTAINER: 'mb-6 pb-6 border-b border-gray-200',
+  SELECT: 'w-full p-3 border border-gray-300 rounded-lg text-base mb-3',
+  STOCK_INFO: 'text-xs text-red-500 mt-3 whitespace-pre-line',
+  // 필요시 추가
+};
+
+export const UI_IDS = {
+  CART_ITEMS: 'cart-items',
+  CART_TOTAL: 'cart-total',
+  // 필요시 추가
+};
+
+export const UI_TEXTS = {
+  SOLD_OUT: '품절',
+  LOW_STOCK: '재고 부족',
+  // 필요시 추가
+};

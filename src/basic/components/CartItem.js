@@ -1,4 +1,3 @@
-// CartItem.js
 // 상품 객체와 수량을 받아 카트 아이템 DOM 엘리먼트를 반환하는 컴포넌트
 
 export function createCartItemElement(product, quantity = 1) {
