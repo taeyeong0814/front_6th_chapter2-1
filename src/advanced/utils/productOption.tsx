@@ -1,4 +1,4 @@
-import type { Product } from '../types';
+import { Product } from '@/types/product';
 
 // 상품 옵션 라벨을 JSX로 반환하는 컴포넌트
 export function ProductOptionLabel({ product }: { product: Product }) {

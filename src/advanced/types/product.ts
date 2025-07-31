@@ -1,4 +1,3 @@
-// 공통 타입 예시
 export interface Product {
   id: string;
   name: string;

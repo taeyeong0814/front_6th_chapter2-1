@@ -1,12 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
 
+import { Product } from '@/types/product';
+
 import ShoppingCart from './components/cart/ShoppingCart';
 import GuideToggle from './components/guide/GuideToggle';
 import Header from './components/layout/Header';
 import OrderSummary from './components/order/OrderSummary';
 import { useOrderSummary } from './hooks/useOrderSummary';
 import { PRODUCTS } from './lib/product';
-import type { Product } from './types';
 
 const initialCartItems: { productId: string; quantity: number }[] = [];
 

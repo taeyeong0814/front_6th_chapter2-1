@@ -1,23 +1,6 @@
-import type { Product } from '../types';
+import type { CartItem, OrderSummaryResult } from '../types/order/orderSummary';
+import type { Product } from '../types/product';
 import { DISCOUNT_RATES, POINT_RATES } from './constants';
-
-export interface CartItem {
-  productId: string;
-  quantity: number;
-}
-
-export interface OrderSummaryResult {
-  itemCnt: number;
-  subTot: number;
-  totalAmt: number;
-  discRate: number;
-  savedAmount: number;
-  itemDiscounts: { name: string; discount: number }[];
-  isTuesday: boolean;
-  stockMsg: string;
-  points: number;
-  pointDetails: string;
-}
 
 // 상품별 합계 및 개별상품 할인 계산
 const getCartSummary = (products: Product[], cartItems: CartItem[]) => {
@@ -65,23 +48,6 @@ const getTotalDiscount = (subTot: number, totalAmt: number, itemCnt: number, tod
   }
   return { finalTotal, discRate, tuesdayApplied, originalTotal };
 };
-export interface CartItem {
-  productId: string;
-  quantity: number;
-}
-
-export interface OrderSummaryResult {
-  itemCnt: number;
-  subTot: number;
-  totalAmt: number;
-  discRate: number;
-  savedAmount: number;
-  itemDiscounts: { name: string; discount: number }[];
-  isTuesday: boolean;
-  stockMsg: string;
-  points: number;
-  pointDetails: string;
-}
 
 export const calculateOrderSummary = (products: Product[], cartItems: CartItem[]): OrderSummaryResult => {
   const today = new Date();

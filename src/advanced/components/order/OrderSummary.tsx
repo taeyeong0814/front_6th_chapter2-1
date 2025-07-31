@@ -1,23 +1,6 @@
 import React from 'react';
 
-import type { Product } from '../../types';
-
-interface OrderSummaryProps {
-  summary: {
-    itemCnt: number;
-    subTot: number;
-    totalAmt: number;
-    discRate: number;
-    savedAmount: number;
-    itemDiscounts: { name: string; discount: number }[];
-    isTuesday: boolean;
-    stockMsg: string;
-    points: number;
-    pointDetails: string;
-    products: Product[];
-    cartItems: { productId: string; quantity: number }[];
-  };
-}
+import type { OrderSummaryProps } from '../../types/orderSummary';
 
 function formatPrice(price: number) {
   return price.toLocaleString('ko-KR', { style: 'currency', currency: 'KRW' });

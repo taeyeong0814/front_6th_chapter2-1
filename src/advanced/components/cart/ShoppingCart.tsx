@@ -1,19 +1,8 @@
 import React from 'react';
 
-import type { Product } from '../../types';
+import type { ShoppingCartProps } from '../../types/shoppingCart';
 import CartItemDisplay from './CartItemDisplay';
 import ProductPicker from './ProductPicker';
-
-interface CartItem {
-  productId: string;
-  quantity: number;
-}
-
-interface ShoppingCartProps {
-  products: Product[];
-  cartItems: CartItem[];
-  setCartItems: React.Dispatch<React.SetStateAction<CartItem[]>>;
-}
 
 const ShoppingCart: React.FC<ShoppingCartProps> = ({ products, cartItems, setCartItems }) => {
   return (
