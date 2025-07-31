@@ -4,18 +4,18 @@ import { products } from '../data/productList.js';
 import { addItemToCart } from '../hooks/useAddToCart.js';
 import { updateSelectOptions } from '../utils/updateSelectOptions.js';
 
-export function bindCartEvents(sel, addBtn, stockInfo, cartDisp, sum) {
+export function bindCartEvents(sel, addBtn, cartDisp, { setProducts, handleCalculateCartStuff }) {
   let lastSel = null;
   let currentProducts = products;
   updateSelectOptions(sel, currentProducts);
-  if (typeof window.handleCalculateCartStuff === 'function') {
-    window.handleCalculateCartStuff(cartDisp, stockInfo, sum, currentProducts);
-  }
+  handleCalculateCartStuff(currentProducts);
+
   addBtn.addEventListener('click', function () {
     const selItem = sel.value;
     const { updatedProducts, addResult } = addItemToCart(currentProducts, cartDisp.children, selItem);
     if (!addResult) return;
     currentProducts = updatedProducts;
+    if (setProducts) setProducts(currentProducts);
     if (addResult.error === 'out-of-stock') {
       alert('재고가 부족합니다.');
       return;
@@ -30,11 +30,10 @@ export function bindCartEvents(sel, addBtn, stockInfo, cartDisp, sum) {
         qtyElem.textContent = addResult.newQty;
       }
     }
-    if (typeof window.handleCalculateCartStuff === 'function') {
-      window.handleCalculateCartStuff(cartDisp, stockInfo, sum, currentProducts);
-    }
+    handleCalculateCartStuff(currentProducts);
     lastSel = selItem;
   });
+
   cartDisp.addEventListener('click', function (event) {
     handleCartItemAction(
       event,
@@ -42,12 +41,11 @@ export function bindCartEvents(sel, addBtn, stockInfo, cartDisp, sum) {
       cartDisp,
       updateSelectOptions,
       function () {
-        if (typeof window.handleCalculateCartStuff === 'function') {
-          window.handleCalculateCartStuff(cartDisp, stockInfo, sum, currentProducts);
-        }
+        handleCalculateCartStuff(currentProducts);
       },
       sel
     );
   });
+
   return () => lastSel;
 }

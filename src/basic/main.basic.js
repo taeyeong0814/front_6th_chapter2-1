@@ -1,24 +1,33 @@
 import { renderCartSummaryUI } from './components/CartSummary.js';
-import { calculateCartSummary } from './hooks/useCartSummary.js';
-import { getProducts, setProducts } from './hooks/useProducts.js';
-
-// 항상 최신 products를 인자로 받아 UI를 갱신하는 함수
-function handleCalculateCartStuff(cartDisp, stockInfo, sum, productsArg) {
-  const productsToUse = productsArg || getProducts();
-  const summary = calculateCartSummary(productsToUse, cartDisp.children, new Date());
-  renderCartSummaryUI(summary, { cartDisp, stockInfo, sum, products: productsToUse });
-}
-
-// window에 등록하여 cartEvents 등에서 호출 가능하게 함 (products 인자 추가)
-window.handleCalculateCartStuff = handleCalculateCartStuff;
 import { renderHeader } from './components/Header.js';
 import { renderManualOverlay } from './components/ManualOverlay.js';
 import { renderOrderSummary } from './components/OrderSummary.js';
 import { bindCartEvents } from './events/cartEvents.js';
 import { bindManualOverlayEvents } from './events/manualOverlayEvents.js';
 import { bindPromotionEvents } from './events/promotionEvents.js';
+import { calculateCartSummary } from './hooks/useCartSummary.js';
+import { getProducts, setProducts } from './hooks/useProducts.js';
 import { createElement } from './utils/dom.js';
 import { htmlToElement } from './utils/htmlToElement.js';
+
+// 카트 요약 계산 (순수 함수)
+function getCartSummary(products, cartItems) {
+  return calculateCartSummary(products, cartItems, new Date());
+}
+
+// UI 렌더링 함수 (DOM 의존)
+function updateCartSummaryUI(summary, { cartDisp, stockInfo, sum, products }) {
+  renderCartSummaryUI(summary, { cartDisp, stockInfo, sum, products });
+}
+
+// cartDisp, stockInfo, sum을 클로저로 보관하는 카트 업데이트 핸들러 생성
+function createCartUpdater({ cartDisp, stockInfo, sum }) {
+  return function (productsArg) {
+    const productsToUse = productsArg || getProducts();
+    const summary = getCartSummary(productsToUse, cartDisp.children);
+    updateCartSummaryUI(summary, { cartDisp, stockInfo, sum, products: productsToUse });
+  };
+}
 
 // 헤더 영역을 생성하여 반환
 function createHeader() {
@@ -97,12 +106,13 @@ function main() {
   const { sel, addBtn, stockInfo, cartDisp, sum, manualToggleBtn, manualOverlayDiv } = setupUI();
   bindManualOverlayEvents(manualToggleBtn, manualOverlayDiv);
   // cartEvents에서 products를 갱신할 수 있도록 setter/getter 제공
-  const getLastSel = bindCartEvents(sel, addBtn, stockInfo, cartDisp, sum, {
+  const cartUpdater = createCartUpdater({ cartDisp, stockInfo, sum });
+  const getLastSel = bindCartEvents(sel, addBtn, cartDisp, {
     setProducts,
     getProducts,
-    handleCalculateCartStuff,
+    handleCalculateCartStuff: cartUpdater,
   });
-  bindPromotionEvents(sel, cartDisp, stockInfo, sum, getLastSel);
+  bindPromotionEvents(sel, cartDisp, sum, getLastSel);
 }
 
 main();
