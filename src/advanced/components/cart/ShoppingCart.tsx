@@ -48,17 +48,16 @@ const ShoppingCart: React.FC<ShoppingCartProps> = ({ products, cartItems, setCar
                   </button>
                   <span>{item.quantity}</span>
                   <button
-                    onClick={() =>
+                    onClick={() => {
+                      if (item.quantity >= product.quantity) {
+                        alert('재고가 부족합니다');
+                        return;
+                      }
                       setCartItems((prev) =>
-                        prev.map((ci) =>
-                          ci.productId === item.productId && ci.quantity < product.quantity
-                            ? { ...ci, quantity: ci.quantity + 1 }
-                            : ci
-                        )
-                      )
-                    }
+                        prev.map((ci) => (ci.productId === item.productId ? { ...ci, quantity: ci.quantity + 1 } : ci))
+                      );
+                    }}
                     className="quantity-change w-6 h-6 border border-black bg-white text-sm flex items-center justify-center transition-all hover:bg-black hover:text-white"
-                    disabled={item.quantity >= product.quantity}
                   >
                     +
                   </button>

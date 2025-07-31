@@ -16,7 +16,6 @@ interface ProductPickerProps {
 
 const ProductPicker: React.FC<ProductPickerProps> = ({ products, cartItems, setCartItems }) => {
   const [selectedId, setSelectedId] = useState(products[0]?.id || '');
-  const [error, setError] = useState('');
 
   const handleAddToCart = () => {
     const product = products.find((p) => p.id === selectedId);
@@ -26,16 +25,18 @@ const ProductPicker: React.FC<ProductPickerProps> = ({ products, cartItems, setC
     const cartQty = cartItem ? cartItem.quantity : 0;
     const availableQty = product.quantity - cartQty;
     if (availableQty <= 0) {
-      setError(`${product.name}: 품절`);
+      // 품절 상태 메시지는 하단에서 렌더링
+      alert('재고가 부족합니다');
       return;
     }
-    setError('');
+    // 에러 상태 메시지는 하단에서 렌더링
     setCartItems((prev) => {
       const exist = prev.find((item) => item.productId === selectedId);
       if (exist) {
         // 재고 초과 방지
         if (product.quantity - exist.quantity <= 0) {
-          setError(`${product.name}: 재고 부족`);
+          // 재고 부족 메시지는 하단에서 렌더링
+          alert('재고가 부족합니다');
           return prev;
         }
         return prev.map((item) => (item.productId === selectedId ? { ...item, quantity: item.quantity + 1 } : item));
@@ -77,21 +78,22 @@ const ProductPicker: React.FC<ProductPickerProps> = ({ products, cartItems, setC
         Add to Cart
       </button>
       <div id="stock-status" className="text-xs mt-3 whitespace-pre-line">
-        {products.some((p) => p.quantity === 0) ? (
-          products
-            .filter((p) => p.quantity === 0)
-            .map((p) => {
-              return <div key={p.id} className="text-red-500">{`${p.name}: 품절`}</div>;
-            })
-        ) : selectedProduct ? (
-          selectedProduct.quantity - selectedCartQty <= 5 ? (
-            <span className="text-red-500">{`${selectedProduct.name}: 재고 부족 (${selectedProduct.quantity - selectedCartQty}개 남음)`}</span>
-          ) : (
-            error
-          )
-        ) : (
-          ''
-        )}
+        {products
+          .map((product) => {
+            const cartItem = cartItems.find((item) => item.productId === product.id);
+            const cartQty = cartItem ? cartItem.quantity : 0;
+            const leftQty = product.quantity - cartQty;
+            if (leftQty === 0) {
+              return <div key={product.id} className="text-red-500">{`${product.name}: 품절`}</div>;
+            } else if (leftQty > 0 && leftQty <= 5) {
+              return (
+                <div key={product.id} className="text-red-500">{`${product.name}: 재고 부족 (${leftQty}개 남음)`}</div>
+              );
+            } else {
+              return null;
+            }
+          })
+          .filter(Boolean)}
       </div>
     </div>
   );
