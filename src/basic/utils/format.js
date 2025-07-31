@@ -13,5 +13,5 @@ export function formatPrice(value) {
   }
   const num = Number(value);
   if (isNaN(num)) return '';
-  return num.toLocaleString('ko-KR') + '원';
+  return '₩' + num.toLocaleString('ko-KR');
 }

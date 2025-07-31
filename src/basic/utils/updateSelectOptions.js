@@ -1,5 +1,4 @@
 // 상품 셀렉트 옵션 갱신 함수
-import { formatPrice } from '../utils/format.js';
 import { UI_TEXTS } from './constants.js';
 import { QUANTITY_THRESHOLDS } from './constants.js';
 import { createElement } from './dom.js';
@@ -7,15 +6,15 @@ import { createElement } from './dom.js';
 function getOptionText(item) {
   switch (true) {
     case item.quantity === 0:
-      return `${item.name} - ${formatPrice(item.discountPrice)} (${UI_TEXTS.SOLD_OUT})${item.onSale ? ' ⚡SALE' : ''}${item.suggestSale ? ' 💝추천' : ''}`;
+      return `${item.name} - ${item.discountPrice}원 (${UI_TEXTS.SOLD_OUT})${item.onSale ? ' ⚡SALE' : ''}${item.suggestSale ? ' 💝추천' : ''}`;
     case item.onSale && item.suggestSale:
-      return `⚡💝${item.name} - ${formatPrice(item.price)} → ${formatPrice(item.discountPrice)} (25% SUPER SALE!)`;
+      return `⚡💝${item.name} - ${item.price}원 → ${item.discountPrice}원 (25% SUPER SALE!)`;
     case item.onSale:
-      return `⚡${item.name} - ${formatPrice(item.price)} → ${formatPrice(item.discountPrice)} (20% SALE!)`;
+      return `⚡${item.name} - ${item.price}원 → ${item.discountPrice}원 (20% SALE!)`;
     case item.suggestSale:
-      return `💝${item.name} - ${formatPrice(item.price)} → ${formatPrice(item.discountPrice)} (5% 추천할인!)`;
+      return `💝${item.name} - ${item.price}원 → ${item.discountPrice}원 (5% 추천할인!)`;
     default:
-      return `${item.name} - ${formatPrice(item.discountPrice)}${item.onSale ? ' ⚡SALE' : ''}${item.suggestSale ? ' 💝추천' : ''}`;
+      return `${item.name} - ${item.discountPrice}원${item.onSale ? ' ⚡SALE' : ''}${item.suggestSale ? ' 💝추천' : ''}`;
   }
 }
 
