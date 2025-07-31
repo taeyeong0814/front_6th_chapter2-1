@@ -14,7 +14,8 @@
     "test:advanced": "vitest advanced.test.js",
     "test:ui": "vitest --ui",
     "lint": "eslint .",
-    "lint:fix": "eslint . --fix"
+    "lint:fix": "eslint . --fix",
+    "gh-pages": "pnpm build && gh-pages -d ./dist"
   },
   "dependencies": {
     "react": "^19.1.1",
