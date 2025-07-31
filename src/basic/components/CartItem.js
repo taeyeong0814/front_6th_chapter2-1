@@ -1,3 +1,4 @@
+import { formatPrice } from '../utils/format.js';
 // 상품 객체와 수량을 받아 카트 아이템 DOM 엘리먼트를 반환하는 컴포넌트
 export function createCartItemElement(product, quantity = 1) {
   const newItem = document.createElement('div');
@@ -6,9 +7,9 @@ export function createCartItemElement(product, quantity = 1) {
     'grid grid-cols-[80px_1fr_auto] gap-5 py-5 border-b border-gray-100 first:pt-0 last:border-b-0 last:pb-0';
   let priceHtml = '';
   if (product.onSale || product.suggestSale) {
-    priceHtml = `<span class="line-through text-gray-400">${product.price}원</span> <span class="${product.onSale && product.suggestSale ? 'text-purple-600' : product.onSale ? 'text-red-500' : 'text-blue-500'}">${product.discountPrice}원</span>`;
+    priceHtml = `<span class="line-through text-gray-400">${formatPrice(product.price)}</span> <span class="${product.onSale && product.suggestSale ? 'text-purple-600' : product.onSale ? 'text-red-500' : 'text-blue-500'}">${formatPrice(product.discountPrice)}</span>`;
   } else {
-    priceHtml = product.discountPrice + '원';
+    priceHtml = formatPrice(product.discountPrice);
   }
   const namePrefix =
     product.onSale && product.suggestSale ? '⚡💝' : product.onSale ? '⚡' : product.suggestSale ? '💝' : '';
