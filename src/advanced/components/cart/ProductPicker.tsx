@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 
-import type { Product } from '../../types/header.ts';
+import { Product } from '@/types/product';
+
 import { ProductOptionLabel } from '../../utils/productOption.tsx';
 
 interface CartItem {
